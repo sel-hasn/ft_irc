@@ -16,7 +16,10 @@ int main(int ac, char **av){
         return 1;
     }
     try{
+        signal(SIGQUIT, Server::Signals_handler);
+        signal(SIGINT, Server::Signals_handler);
         Server srv(Port, static_cast<std::string> (av[2]));
+        srv.ServerStarts();
     } 
     catch(const CustomException& e){
         std::cout << "Server's Error Exception : " << e.msg();

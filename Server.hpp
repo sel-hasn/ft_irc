@@ -7,35 +7,57 @@
 #include <netdb.h>
 #include <iostream>
 #include <vector>
+#include <set>
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <cstring>
 #include <cstdlib>
-
+#include <signal.h>
+#include <sstream> 
 #include "CustomException.hpp"
 #include "Client.hpp"
+#include <poll.h>
 
 class Server{
     private:
+    Server();
+    void                    ServerPrepa();
+    int                     ServerSocketFD;
+    int                     Port;
+    std::string             PassWord;
+    std::vector<Client>     Clients;
+    std::vector<pollfd>     PollFDs;
+    sockaddr_in             SAddress;
+    
+    public:
         Server& operator=(const Server& other);
         Server(const Server& other);
-        Server();
-
-    public:
         Server(int port, std::string Password);
         ~Server();
-        // parametrize constructor
+        static bool             Signal;
 
+        /* getter  of server */
+        std::string             getPassword() const { return PassWord; };
+        int                     getPort() const { return Port; };
+        int                     getServerSocketFD() const { return ServerSocketFD; };
+        
+        /* setter  of server */
+        void                    setPassword(std::string newpass) { PassWord = newpass; };
+        void                    setPort(int newport) { Port = newport; };
+        void                    setServerSocketFD(int newfd) { ServerSocketFD = newfd; };
 
-        void                newClientHandler(int cSockerfd, sockaddr_in Client__Address);
-        int                 ServerSocketFD;
-        int                 Port;
-        std::string         PassWord;
-        std::vector<Client>    Clients;
-        sockaddr_in         SAddress;
-
+        void                    PASS_cmd(Client *clint, std::string &buffer);
+        void                    treating_commands(Client *clint);
+        void                    newClientRegister(Client *clint);
+        void                    handleClientData(Client *clint);
+        void                    sendReply(int cSockfd, std::string message);
+        void                    handleNewClient();
+        void                    ServerStarts();
+        static void             Signals_handler(int signum);
+        Client*                 getClient(int fd);
+        void                    erasing_fd_from_vecteurs(int fd);
 };
 
 
