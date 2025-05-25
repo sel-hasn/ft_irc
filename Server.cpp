@@ -66,7 +66,7 @@ std::vector<std::string> split(const std::string& str) {
 }
 
 
-void Server::erasing_fd_from_vecteurs(int fd){
+void Server:: erasing_fd_from_vecteurs(int fd){
     for (size_t i = 0; i < Clients.size(); i++)
     {
         if (Clients[i].getClientSocketfd() == fd)
@@ -136,7 +136,11 @@ void    Server::ServerStarts(){
                     try{
                         handleClientData(getClient(PollFDs[i].fd));
                     }
-                    catch(...){}
+                    catch(const CustomException& e){
+                        erasing_fd_from_vecteurs(PollFDs[i].fd);
+                        close(PollFDs[i].fd);
+                        std::cout << "cought exception inside server's poll's func() :" << e.msg();
+                    }
                 }
             }
         }
@@ -153,11 +157,6 @@ void Server::handleNewClient(){
         std::cerr << "accept () failed .\n";
         return;
     }
-    // if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
-	// {
-    //     std::cerr << "fcntl() failed" << std::endl;
-    //     return ;
-    // }
     pollfd client_pollfd;
     client_pollfd.fd = client_fd;
     client_pollfd.events = POLLIN;
@@ -275,7 +274,7 @@ void  Server::treating_commands(Client *clint){
         else if (clint->gethasPass()){
             if (input[0] == "NICK")
                 NICK_cmd(clint, buffer);
-            if (input[0] == "USER")
+            else if (input[0] == "USER")
                 USER_cmd(clint, buffer);
             // else if (input[0] == "USER")
             //     //do USER
@@ -298,7 +297,7 @@ void  Server::treating_commands(Client *clint){
             // else if (input[0] == "PRIVMSG")
             //     //do PRIVMSG
             //     ;
-            else{
+            else {
                 sendReply(clint->getClientSocketfd(), ERR_UNKNOWNCOMMAND(clint->getName(), buffer));
             }
         }
@@ -314,7 +313,7 @@ void Server::handleClientData(Client *clint){
     std::memset(buffer, 0, 1024);
     if (!clint){
         std::cout << "maybe forget about it !\n" ;
-        return ;
+        throw CustomException("client is not exist anymore\n");
     }
     int bytesrecieved = recv(clint->getClientSocketfd(), buffer, 1023, 0);
     switch (bytesrecieved)
