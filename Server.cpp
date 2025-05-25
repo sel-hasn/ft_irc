@@ -3,12 +3,12 @@
 
 bool Server::Signal = false;
 
-Server::Server(int port, std::string Pass): ServerSocketFD(-1), Port(port), PassWord(Pass){
+Server::Server(int port, std::string Pass): ServerSocketFD(-1), Port(port), PassWord(Pass), ircName("*"){
 }
 
 void    Server::sendReply(int cSocketfd, std::string message){
     send(cSocketfd, message.c_str(), message.length(), 0);
-    close(cSocketfd);
+    // close(cSocketfd);
 }
 
 Server::Server(const Server& other){
@@ -175,21 +175,22 @@ void Server::handleNewClient(){
 }
 
 void Server::PASS_cmd(Client *clint, std::string &buffer){
-    if (buffer.length() > 128){
-        send(clint->getClientSocketfd(), "ERROR : Hey Password by rules is not contains alot of chars 128 max\n", 69, 0);
-        std::cerr << "Client did write alot of chars.\n";
-        erasing_fd_from_vecteurs(clint->getClientSocketfd());
+    if (clint->gethasPass()){
+        sendReply(clint->getClientSocketfd(), ERR_ALREADYREGISTRED(ircName));
+        return ;
     }
     std::vector<std::string> splited = split(buffer);
     if (splited.size() != 2){
-        send(clint->getClientSocketfd(), "Please enter a Valid pass: PASS <password> (2 args, PASS counted)\n", 67, 0);
+        sendReply(clint->getClientSocketfd(), ERR_NEEDMOREPARAMS(ircName));
         erasing_fd_from_vecteurs(clint->getClientSocketfd());
+        close(clint->getClientSocketfd());
         return ;
     }
     else{
         if (splited[1] != getPassword()){
-            send(clint->getClientSocketfd(), "incorrect Password\n", 67, 0);
+            sendReply(clint->getClientSocketfd(), ERR_PASSWDMISMATCH(ircName));
             erasing_fd_from_vecteurs(clint->getClientSocketfd());
+            close(clint->getClientSocketfd());
             return ;
         }
         else{
@@ -199,56 +200,113 @@ void Server::PASS_cmd(Client *clint, std::string &buffer){
     }
 }
 
+void  Server::NICK_cmd(Client *clint, std::string &buffer){
+    std::vector<std::string> splited = split(buffer);
+    if (splited.size() != 2){
+        sendReply(clint->getClientSocketfd(), ERR_NEEDMOREPARAMS(ircName));
+        std::cerr << "Client sent invalid nickname args\n";
+        return ;
+    }
+    if (clint->gethasName()){
+        sendReply(clint->getClientSocketfd(), ERR_ALREADYREGISTRED(ircName));
+        return;
+    }
+    if (splited[1].length() < 4 || splited[1].length() > 9) {
+        sendReply(clint->getClientSocketfd(), ERR_NONICKNAMEGIVEN(ircName));
+        std::cerr << "Client sent invalid nickname length\n";
+    }
+    for (size_t i = 0; i < splited[1].length(); i++ ) {
+        if (!std::isalpha(splited[1][i]) && splited[1][i] != '-' && splited[1][i] != '_'){
+            sendReply(clint->getClientSocketfd(),  "ERROR :Invalid nickname with alpha and - and _ chars accepted only\n");
+            std::cerr << "Client sent invalid nickname (chars invalid)\n";
+        }
+    }
+    
+    for (size_t i = 0; i < Clients.size(); i++) {
+        if (Clients[i].getName() == splited[1]) {
+            sendReply(clint->getClientSocketfd(), ERR_NICKNAMEINUSE(ircName));
+            std::cerr << "Duplicate nickname\n";
+            return ;
+        }
+    }
+    clint->setName(splited[1]);
+    clint->sethasName(true);
+    if (clint->gethasUserName()){
+        sendReply(clint->getClientSocketfd(), RPL_WELCOME(ircName, "Welcome to irc server !"));
+        clint->setRegister(true);
+    }
+}
+
+void  Server::USER_cmd(Client *clint, std::string &buffer){
+    std::vector<std::string> splited = split(buffer);
+    if (clint->gethasUserName()){
+        sendReply(clint->getClientSocketfd(), ERR_ALREADYREGISTRED(ircName));
+        return;
+    }
+    if (splited.size() != 5){
+        std::string msg = "USER";
+        sendReply(clint->getClientSocketfd(), ERR_NEEDMOREPARAMS(msg));
+        std::cerr << "Client sent invalid USER args\n";
+        return ;
+    }
+    if (buffer.find(':') == std::string::npos){
+        std::string msg = "USER";
+        sendReply(clint->getClientSocketfd(), ERR_NEEDMOREPARAMS(msg));
+         std::cerr << "Client sent invalid USER without real name ':' \n";
+        return ;
+    }
+    clint->setrealName(splited[3]);
+    clint->sethasrealName(true);
+    clint->sethasUname(true);
+    if (clint->gethasName()){
+        sendReply(clint->getClientSocketfd(), RPL_WELCOME(ircName, "Welcome to irc server !"));
+        clint->setRegister(true);
+    }
+}
+
 void  Server::treating_commands(Client *clint){
-        std::string buffer = clint->getBUFFER();
-        eraser_samenewlines(buffer);
-        std::cout << buffer << std::endl;
+    if (clint->getBUFFER().length() == 0)
+    return ;
+    std::string buffer = clint->getBUFFER();
+    eraser_samenewlines(buffer);
         std::vector<std::string> input = split(buffer);
         if (input[0] == "PASS")
-            //do PASS
-            ;
-        else if (input[0] == "NICK")
-            //do NICK
-            ;
-        else if (input[0] == "USER")
-            //do USER
-            ;
-        else if (input[0] == "JOIN")
-            //do JOIN
-            ;
-        else if (input[0] == "KICK")
-            //do KICK
-            ;
-        else if (input[0] == "INVITE")
-            //do INVITE
-            ;
-        else if (input[0] == "TOPIC")
-            //do TOPIC
-            ;
-        else if (input[0] == "MODE")
-            //do MODE
-            ;
-        else if (input[0] == "PRIVMSG")
-            //do PRIVMSG
-            ;
-        // if (!clint->getisRegistered()){
-        //     if (clint->gethasPass() && std::strncmp(buffer.c_str(), "PASS ", 5) == 0)
-        //         PASS_cmd(clint, buffer);
-        //     else {
-        //         send(clint->gethasPass(), "Please enter a Valid pass: PASS <password> (Pass as first cmd)\n", 64, 0);
-        //         erasing_fd_from_vecteurs(clint->getClientSocketfd());
-        //         close(clint->getClientSocketfd());
-        //     }
-                       
-        //     // if (clint->gethasPass() && !clint->hasName && std::strncmp(clint->BUFFER.c_str(), "NICK ", 6) == 0)
-        //     //     NICK_cmd(clint);
-        //     // if (clint->gethasPass() && !clint->hasUserName && std::strncmp(clint->BUFFER.c_str(), "USER ", 6) == 0)
-        //     //     USER_cmd(clint);
-
-        // }
-        // else{
-        //     // part of you folks
-        // }
+            PASS_cmd(clint, buffer);
+        else if (clint->gethasPass()){
+            if (input[0] == "NICK")
+                NICK_cmd(clint, buffer);
+            if (input[0] == "USER")
+                USER_cmd(clint, buffer);
+            // else if (input[0] == "USER")
+            //     //do USER
+            //     ;
+            // else if (input[0] == "JOIN")
+            //     //do JOIN
+            //     ;
+            // else if (input[0] == "KICK")
+            //     //do KICK
+            //     ;
+            // else if (input[0] == "INVITE")
+            //     //do INVITE
+            //     ;
+            // else if (input[0] == "TOPIC")
+            //     //do TOPIC
+            //     ;
+            // else if (input[0] == "MODE")
+            //     //do MODE
+            //     ;
+            // else if (input[0] == "PRIVMSG")
+            //     //do PRIVMSG
+            //     ;
+            else{
+                sendReply(clint->getClientSocketfd(), ERR_UNKNOWNCOMMAND(clint->getName(), buffer));
+            }
+        }
+        else{
+            sendReply(clint->getClientSocketfd(), ERR_NOTREGISTERED);
+            erasing_fd_from_vecteurs(clint->getClientSocketfd());
+            close(clint->getClientSocketfd());
+        }
 }
 
 void Server::handleClientData(Client *clint){
@@ -278,6 +336,7 @@ void Server::handleClientData(Client *clint){
         default:{
             clint->setBuff(std::string(buffer));
             treating_commands(clint);
+            clint->setBuff("");
         }
     }
 }
