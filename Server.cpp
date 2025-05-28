@@ -110,7 +110,7 @@ void  Server::treating_commands(Client *clint){
     std::vector<std::string> input = split(buffer);
     if (input[0] == "PASS")
         PASS_cmd(clint, buffer);
-    else if (clint->gethasPass()){
+    // else if (clint->gethasPass()){
         if (input[0] == "NICK")
             NICK_cmd(clint, buffer);
         else if (input[0] == "USER")
@@ -139,12 +139,13 @@ void  Server::treating_commands(Client *clint){
         else {
             sendReply(clint->getClientSocketfd(), ERR_UNKNOWNCOMMAND(clint->getName(), buffer));
         }
-    }
-    else{
-        sendReply(clint->getClientSocketfd(), ERR_NOTREGISTERED);
-        erasing_fd_from_vecteurs(clint->getClientSocketfd());
-        close(clint->getClientSocketfd());
-    }
+    // }
+    // else{
+    //     sendReply(clint->getClientSocketfd(), ERR_NOTREGISTERED);
+    //     erasing_fd_from_vecteurs(clint->getClientSocketfd());
+    //     std::cout << "client with sockfd :" << clint->getClientSocketfd() << " is disconnected !\n";
+    //     close(clint->getClientSocketfd());
+    // }
 }
 
 void Server::handleClientData(Client *clint){
