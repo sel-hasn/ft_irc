@@ -66,5 +66,7 @@ class Server{
 
 int ParsePort(const std::string& av1);
 void PasswordParse(std::string av2);
+std::vector<std::string> split(const std::string& str);
+void eraser_samenewlines(std::string& receivedData);
 
 #endif

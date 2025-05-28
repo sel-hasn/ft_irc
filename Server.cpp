@@ -6,83 +6,6 @@ bool Server::Signal = false;
 Server::Server(int port, std::string Pass): ServerSocketFD(-1), Port(port), PassWord(Pass), ircName("*"){
 }
 
-void    Server::sendReply(int cSocketfd, std::string message){
-    send(cSocketfd, message.c_str(), message.length(), 0);
-    // close(cSocketfd);
-}
-
-Server::Server(const Server& other){
-    (void) other;
-}
-Server& Server::operator=(const Server& other){
-    if (this != &other){
-        this->setPassword(other.getPassword());
-        this->setPort(other.getPort());
-        this->setServerSocketFD(other.getServerSocketFD());
-    }
-    return *this;
-}
-
-void Server::Signals_handler(int signum){
-    (void)signum;
-	std::cout << std::endl << "Signal Received!" << std::endl;
-	Server::Signal = true;
-}
-
-Client* Server::getClient(int fd){
-    for(size_t i = 0; i < Clients.size(); i++){
-        if (Clients[i].getClientSocketfd() == fd){
-            return &Clients[i];
-        }
-    }
-    return NULL;
-}
-
-static void eraser_samenewlines(std::string& receivedData){
-    for (size_t i = 0; i < receivedData.length(); ) {
-        if (receivedData[i] == '\n' || receivedData[i] == '\r')
-            receivedData.erase(i, 1);
-        else
-            ++i;
-    }
-}
-
-std::vector<std::string> split(const std::string& str) {
-    std::vector<std::string> tokens;
-    std::istringstream iss(str);
-    std::string token;
-
-    while (iss >> token) {
-        tokens.push_back(token);
-        if (!token.empty() && token[0] == ':') {
-            // Everything else is part of realname
-            std::string rest;
-            std::getline(iss, rest);
-            tokens.back() += rest; // append the rest
-            break;
-        }
-    }
-    return tokens;
-}
-
-
-void Server:: erasing_fd_from_vecteurs(int fd){
-    for (size_t i = 0; i < Clients.size(); i++)
-    {
-        if (Clients[i].getClientSocketfd() == fd)
-            Clients.erase(Clients.begin() + i);
-    }
-    for (size_t i = 1; i < PollFDs.size(); i++)
-    {
-        if (PollFDs[i].fd == fd)
-            PollFDs.erase(PollFDs.begin() + i);
-    }
-}
-
-/////////////////////////////////////////////////////////////////////////
-////////////////////////utils////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////
-
 void    Server::ServerPrepa(){
     std::memset(&SAddress, 0, sizeof(SAddress));
     SAddress.sin_family = AF_INET;
@@ -145,7 +68,7 @@ void    Server::ServerStarts(){
             }
         }
     }
-    //close all sockets before leaving the door;
+    // close all sockets before leaving the door;
 }
 
 void Server::handleNewClient(){
@@ -155,6 +78,10 @@ void Server::handleNewClient(){
     int client_fd = accept(ServerSocketFD, (sockaddr*)&client_addr, &addr_len);
     if (client_fd < 0) {
         std::cerr << "accept () failed .\n";
+        return;
+    }
+    if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1){//-> set the socket option (O_NONBLOCK) for non-blocking socket
+        std::cout << "fcntl() failed" << std::endl; 
         return;
     }
     pollfd client_pollfd;
@@ -173,160 +100,68 @@ void Server::handleNewClient(){
     std::cout << "New client connected: " << client_fd << std::endl;
 }
 
-void Server::PASS_cmd(Client *clint, std::string &buffer){
-    if (clint->gethasPass()){
-        sendReply(clint->getClientSocketfd(), ERR_ALREADYREGISTRED(ircName));
-        return ;
-    }
-    std::vector<std::string> splited = split(buffer);
-    if (splited.size() != 2){
-        sendReply(clint->getClientSocketfd(), ERR_NEEDMOREPARAMS(ircName));
-        erasing_fd_from_vecteurs(clint->getClientSocketfd());
-        close(clint->getClientSocketfd());
-        return ;
-    }
-    else{
-        if (splited[1] != getPassword()){
-            sendReply(clint->getClientSocketfd(), ERR_PASSWDMISMATCH(ircName));
-            erasing_fd_from_vecteurs(clint->getClientSocketfd());
-            close(clint->getClientSocketfd());
-            return ;
-        }
-        else{
-            clint->setPass(splited[1]);
-            clint->sethasPass(true);
-        }
-    }
-}
-
-void  Server::NICK_cmd(Client *clint, std::string &buffer){
-    std::vector<std::string> splited = split(buffer);
-    if (splited.size() != 2){
-        sendReply(clint->getClientSocketfd(), ERR_NEEDMOREPARAMS(ircName));
-        std::cerr << "Client sent invalid nickname args\n";
-        return ;
-    }
-    if (clint->gethasName()){
-        sendReply(clint->getClientSocketfd(), ERR_ALREADYREGISTRED(ircName));
-        return;
-    }
-    if (splited[1].length() < 4 || splited[1].length() > 9) {
-        sendReply(clint->getClientSocketfd(), ERR_NONICKNAMEGIVEN(ircName));
-        std::cerr << "Client sent invalid nickname length\n";
-    }
-    for (size_t i = 0; i < splited[1].length(); i++ ) {
-        if (!std::isalpha(splited[1][i]) && splited[1][i] != '-' && splited[1][i] != '_'){
-            sendReply(clint->getClientSocketfd(),  "ERROR :Invalid nickname with alpha and - and _ chars accepted only\n");
-            std::cerr << "Client sent invalid nickname (chars invalid)\n";
-        }
-    }
-    
-    for (size_t i = 0; i < Clients.size(); i++) {
-        if (Clients[i].getName() == splited[1]) {
-            sendReply(clint->getClientSocketfd(), ERR_NICKNAMEINUSE(ircName));
-            std::cerr << "Duplicate nickname\n";
-            return ;
-        }
-    }
-    clint->setName(splited[1]);
-    clint->sethasName(true);
-    if (clint->gethasUserName()){
-        sendReply(clint->getClientSocketfd(), RPL_WELCOME(ircName, "Welcome to irc server !"));
-        clint->setRegister(true);
-    }
-}
-
-void  Server::USER_cmd(Client *clint, std::string &buffer){
-    std::vector<std::string> splited = split(buffer);
-    if (clint->gethasUserName()){
-        sendReply(clint->getClientSocketfd(), ERR_ALREADYREGISTRED(ircName));
-        return;
-    }
-    if (splited.size() != 5){
-        std::string msg = "USER";
-        sendReply(clint->getClientSocketfd(), ERR_NEEDMOREPARAMS(msg));
-        std::cerr << "Client sent invalid USER args\n";
-        return ;
-    }
-    if (buffer.find(':') == std::string::npos){
-        std::string msg = "USER";
-        sendReply(clint->getClientSocketfd(), ERR_NEEDMOREPARAMS(msg));
-         std::cerr << "Client sent invalid USER without real name ':' \n";
-        return ;
-    }
-    clint->setrealName(splited[3]);
-    clint->sethasrealName(true);
-    clint->sethasUname(true);
-    if (clint->gethasName()){
-        sendReply(clint->getClientSocketfd(), RPL_WELCOME(ircName, "Welcome to irc server !"));
-        clint->setRegister(true);
-    }
-}
-
 void  Server::treating_commands(Client *clint){
     if (clint->getBUFFER().length() == 0)
-    return ;
+        return ;
     std::string buffer = clint->getBUFFER();
     eraser_samenewlines(buffer);
-        std::vector<std::string> input = split(buffer);
-        if (input[0] == "PASS")
-            PASS_cmd(clint, buffer);
-        else if (clint->gethasPass()){
-            if (input[0] == "NICK")
-                NICK_cmd(clint, buffer);
-            else if (input[0] == "USER")
-                USER_cmd(clint, buffer);
-            // else if (input[0] == "USER")
-            //     //do USER
-            //     ;
-            // else if (input[0] == "JOIN")
-            //     //do JOIN
-            //     ;
-            // else if (input[0] == "KICK")
-            //     //do KICK
-            //     ;
-            // else if (input[0] == "INVITE")
-            //     //do INVITE
-            //     ;
-            // else if (input[0] == "TOPIC")
-            //     //do TOPIC
-            //     ;
-            // else if (input[0] == "MODE")
-            //     //do MODE
-            //     ;
-            // else if (input[0] == "PRIVMSG")
-            //     //do PRIVMSG
-            //     ;
-            else {
-                sendReply(clint->getClientSocketfd(), ERR_UNKNOWNCOMMAND(clint->getName(), buffer));
-            }
+    if (buffer.length() == 0)
+        return ;
+    std::vector<std::string> input = split(buffer);
+    if (input[0] == "PASS")
+        PASS_cmd(clint, buffer);
+    else if (clint->gethasPass()){
+        if (input[0] == "NICK")
+            NICK_cmd(clint, buffer);
+        else if (input[0] == "USER")
+            USER_cmd(clint, buffer);
+        // else if (input[0] == "USER")
+        //     //do USER
+        //     ;
+        // else if (input[0] == "JOIN")
+        //     //do JOIN
+        //     ;
+        // else if (input[0] == "KICK")
+        //     //do KICK
+        //     ;
+        // else if (input[0] == "INVITE")
+        //     //do INVITE
+        //     ;
+        // else if (input[0] == "TOPIC")
+        //     //do TOPIC
+        //     ;
+        // else if (input[0] == "MODE")
+        //     //do MODE
+        //     ;
+        // else if (input[0] == "PRIVMSG")
+        //     //do PRIVMSG
+        //     ;
+        else {
+            sendReply(clint->getClientSocketfd(), ERR_UNKNOWNCOMMAND(clint->getName(), buffer));
         }
-        else{
-            sendReply(clint->getClientSocketfd(), ERR_NOTREGISTERED);
-            erasing_fd_from_vecteurs(clint->getClientSocketfd());
-            close(clint->getClientSocketfd());
-        }
+    }
+    else{
+        sendReply(clint->getClientSocketfd(), ERR_NOTREGISTERED);
+        erasing_fd_from_vecteurs(clint->getClientSocketfd());
+        close(clint->getClientSocketfd());
+    }
 }
 
 void Server::handleClientData(Client *clint){
     char    buffer[1024];
     std::memset(buffer, 0, 1024);
-    if (!clint){
-        std::cout << "maybe forget about it !\n" ;
+    if (!clint)
         throw CustomException("client is not exist anymore\n");
-    }
     int bytesrecieved = recv(clint->getClientSocketfd(), buffer, 1023, 0);
     switch (bytesrecieved)
     {
         case (-1):{
-            // std::cerr << "recv() failed\n";
             const char *msg = "an issue appeared !\n";
             send(clint->getClientSocketfd(), msg, sizeof(msg), 0);
             close(clint->getClientSocketfd());
             return ;
         }
         case (0):{
-            // std::cerr << "Client didn't sent any\n";
             const char *msg = "u re disconnected !\n";
             send(clint->getClientSocketfd(), msg, sizeof(msg), 0);
             close(clint->getClientSocketfd());
@@ -341,5 +176,4 @@ void Server::handleClientData(Client *clint){
 }
 
 Server::~Server(){
-    // need to close all sockets && connections between server and clients !
 }
