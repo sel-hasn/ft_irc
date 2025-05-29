@@ -8,7 +8,7 @@ Server::Server(int port, std::string Pass): ServerSocketFD(-1), Port(port), Pass
 
 void    Server::sendReply(int cSocketfd, std::string message){
     send(cSocketfd, message.c_str(), message.length(), 0);
-    close(cSocketfd);
+    // close(cSocketfd);
 }
 
 Server::Server(const Server& other){
@@ -32,6 +32,15 @@ void Server::Signals_handler(int signum){
 Client* Server::getClient(int fd){
     for(size_t i = 0; i < Clients.size(); i++){
         if (Clients[i].getClientSocketfd() == fd){
+            return &Clients[i];
+        }
+    }
+    return NULL;
+}
+
+Client* Server::getClient(std::string name){
+    for(size_t i = 0; i < Clients.size(); i++){
+        if (Clients[i].getName() == name){
             return &Clients[i];
         }
     }
@@ -123,6 +132,14 @@ void    Server::ServerStarts(){
         std::cout << "Exception Cought in ServerPrepa :" << e.msg();
         throw CustomException("ServerStarts() -> ServerPrepa()");
     }
+    Channel b;
+    std::cout << "Creat Channel #j\n";
+    b.setName("#j");
+    b.setTopicProtected(true);
+    Channels.push_back(b);
+    std::cout << "Pushed channel: " << Channels.back().getName()
+          << " | TopicProtected: " << (Channels.back().getTopicProtected() ? "true" : "false") << "\n";
+
     while (!Signal){
         if ((poll(PollFDs.data(), PollFDs.size(), -1) == -1) && !Signal){
             throw CustomException("ServerStarts() : Poll( ) failed.");
@@ -137,6 +154,7 @@ void    Server::ServerStarts(){
                         handleClientData(getClient(PollFDs[i].fd));
                     }
                     catch(...){}
+                    std::cout<<"very Good\n";
                 }
             }
         }
@@ -168,8 +186,15 @@ void Server::handleNewClient(){
     newClient.setClientsock(client_fd);
     newClient.setClientAddress(client_addr);
     newClient.setRegister(false);
+
+    std::stringstream ss;
+    ss << "defaultNick" << Clients.size() + 1;  // e.g., defaultNick1, defaultNick2, ...
+    newClient.setName(ss.str());
+
     Clients.push_back(newClient);
 
+    Channels[0].members.push_back(newClient);
+    Channels[0].admines.push_back(newClient);
 
     std::cout << "New client connected: " << client_fd << std::endl;
 }
@@ -199,38 +224,291 @@ void Server::PASS_cmd(Client *clint, std::string &buffer){
     }
 }
 
-void  Server::treating_commands(Client *clint){
-        std::string buffer = clint->getBUFFER();
+Channel* Server::getChannel(std::string name)
+{
+    for (size_t i = 0; i < Channels.size(); i++) {
+        if (Channels[i].getName() == name) {
+            return &Channels[i];
+        }
+    }
+    return NULL;
+}
+
+void Server::Kick(Client client, std::vector<std::string> input, std::string buffer)
+{
+    if (input.size() < 3)
+    {
+        sendReply(client.getClientSocketfd(), ERR_NEEDMOREPARAMS(input[0]));
+        return ;
+    }
+    Channel *channel = getChannel(input[1]);
+    if (!channel){
+        sendReply(client.getClientSocketfd(), ERR_NOSUCHCHANNEL(input[1]));
+        return ;
+    }
+    Client *toKickclient = getClient(input[2]);
+    if (!toKickclient){
+        sendReply(client.getClientSocketfd(), ERR_USERNOTINCHANNEL(input[2], input[1]));
+        return ;
+    }
+    if (!channel->inChannel(client)){
+        sendReply(client.getClientSocketfd(), ERR_NOTONCHANNEL(client.getName(), input[1]));
+        return ;
+    }
+    std::string couse;
+    if (input.size() > 3)
+        couse = buffer.substr(buffer.find(":") + 1);
+    else 
+        couse = "";
+    if (channel->isOperator(client)) {
+        std::string reply;
+        if (couse.empty())
+            reply = ":" + client.getHostname() + " KICK " + channel->getName() + " " + toKickclient->getName() + "\r\n";
+        else 
+            reply = ":" + client.getHostname() + " KICK " + channel->getName() + " " + toKickclient->getName() + " :" + couse + "\r\n";
+        for (size_t i = 0; i < channel->members.size(); ++i)
+        {
+            if (channel->members[i].getName() != toKickclient->getName())
+                sendReply(channel->members[i].getClientSocketfd(), reply);
+        }
+        sendReply(toKickclient->getClientSocketfd(), reply);
+        if (channel->isOperator(*toKickclient)){
+            channel->RemoveMember(*toKickclient);
+            channel->RemoveOperator(*toKickclient);
+        }
+        else 
+            channel->RemoveMember(*toKickclient);
+    }
+    else 
+        sendReply(client.getClientSocketfd(), ERR_CHANOPRIVSNEEDED(input[1]));
+}
+
+void Server::Invite(Client client, std::vector<std::string> input)
+{
+    if (input.size() < 3)
+    {
+        sendReply(client.getClientSocketfd(), ERR_NEEDMOREPARAMS(input[0]));
+        return ;
+    }
+    Channel *channel = getChannel(input[1]);
+    if (!channel){
+        sendReply(client.getClientSocketfd(), ERR_NOSUCHCHANNEL(input[2]));
+        return ;
+    }
+    if (!channel->inChannel(client)){
+        sendReply(client.getClientSocketfd(), ERR_NOTONCHANNEL(client.getName(), input[2]));
+        return ;
+    }
+    Client *toInviteClient = getClient(input[1]);
+    if (!toInviteClient){
+        sendReply(client.getClientSocketfd(), ERR_NOSUCHNICK(input[1]));
+        return ;
+    }
+    if (channel->inChannel(*toInviteClient))
+    {
+        sendReply(client.getClientSocketfd(), ERR_USERONCHANNEL(input[1], input[2]));
+        return ;
+    }
+    if (channel->getInviteOnly() && channel->isOperator(client))
+    {
+        sendReply(client.getClientSocketfd(), ERR_CHANOPRIVSNEEDED(input[2]));
+        return ;
+    }
+    sendReply(channel->members[i].getClientSocketfd(), RPL_INVITING(client.getName(), toInviteClient->getName(), channel->getName()));
+    std::string reply = ":" + client.getHostname() + " INVITE " + toInviteClient->getName() + " " + channel->getName() + " :\r\n";
+    channel->members.push_back(*toInviteClient);
+    for (size_t i = 0; i < channel->members.size(); ++i)
+    {
+        sendReply(channel->members[i].getClientSocketfd(), reply);
+    }
+}
+
+std::string toString(time_t val) {
+    std::stringstream ss;
+    ss << val;
+    return ss.str();
+}
+
+void Server::Topic(Client client, std::vector<std::string> input, std::string buffer)
+{
+    if (input.size() < 2){
+        sendReply(client.getClientSocketfd(), ERR_NEEDMOREPARAMS(input[0]));
+        return ;
+    }
+    Channel *channel = getChannel(input[1]);
+    if (!channel){
+        sendReply(client.getClientSocketfd(), ERR_NOSUCHCHANNEL(input[1]));
+        return ;
+    }
+    if (!channel->inChannel(client)){
+        sendReply(client.getClientSocketfd(), ERR_NOTONCHANNEL(client.getName(), input[1]));
+        return ;
+    }
+    if (input.size() > 2){
+        if (channel->getTopicProtected() && !channel->isOperator(client)){
+            sendReply(client.getClientSocketfd(), ERR_CHANOPRIVSNEEDED(input[1]));
+            return ;
+        }
+        std::string topic = buffer.substr(buffer.find(":") + 1);
+        std::string reply;
+        if (topic.empty()){
+            channel->setTopic("");
+            reply = ":" + client.getHostname() + " TOPIC " + channel->getName() + " :\r\n";
+        }
+        else {
+            channel->setTopic(topic);
+            reply = ":" + client.getHostname() + " TOPIC " + channel->getName() + " :" + topic + "\r\n";
+            channel->setTopicsetAtime(std::time(0));
+            channel->sethowsetTopic(client.getName());
+        }
+        for (size_t i = 0; i < channel->members.size(); ++i)
+        {
+            sendReply(channel->members[i].getClientSocketfd(), reply);
+        }
+    }
+    else {
+        std::string currentTopic = channel->getTopic();
+        if (currentTopic.empty())
+            sendReply(client.getClientSocketfd(), RPL_NOTOPIC(client.getName(), channel->getName()));
+        else {
+            sendReply(client.getClientSocketfd(), RPL_TOPIC(client.getName(), channel->getName(), currentTopic));
+            sendReply(client.getClientSocketfd(), RPL_TOPICWHOTIME(client.getName(), channel->getName(), channel->gethowsetTopic(), toString(channel->getTopicsetAtime())));
+        }
+    }
+}
+
+void Server::Mode(Client client, std::vector<std::string> input, std::string buffer)
+{
+    if (input.size() < 2)
+    {
+        sendReply(client.getClientSocketfd(), ERR_NEEDMOREPARAMS(input[0]));
+        return ;
+    }
+    Channel *channel = getChannel(input[1]);
+    if (!channel){
+        sendReply(client.getClientSocketfd(), ERR_NOSUCHCHANNEL(input[1]));
+        return ;
+    }
+    if (!channel->inChannel(client)){
+        sendReply(client.getClientSocketfd(), ERR_NOTONCHANNEL(client.getName(), input[1]));
+        return ;
+    }
+    if (input.size() == 2)
+    {
+        std::string mode = "+";
+        std::string argc = "";
+        if (channel->getInviteOnly())
+            mode += "i";
+        if (channel->getTopicProtected())
+            mode += "t";
+        if (channel->get_pass_flag())
+        {
+            argc = channel->getPass();
+            mode += "t";
+        }
+        sendReply(client.getClientSocketfd(), RPL_CHANNELMODEIS(client.getName(), channel->getName(), mode, argc));
+        return;
+    }
+    if (!channel->isOperator(client)){
+        sendReply(client.getClientSocketfd(), ERR_CHANOPRIVSNEEDED(input[1]));
+        return ;
+    }
+    std::string mode = input[2];
+    if (mode.length() != 2 || (mode[0] != '+' && mode[0] != '-'))
+    {
+        sendReply(client.getClientSocketfd(), ERR_UNKNOWNMODE(client.getName(), input[1], mode));
+        return;
+    }
+    bool add;
+    if (mode[2] == "+")
+        add = true;
+    if (mode[2] == "-")
+        add = false;
+    if (mode[2] == "i")
+        channel->getInviteOnly(add);
+    if (mode[2] == "t")
+        channel->getTopicProtected(add);
+    if (mode[2] == "k")
+    {
+        if (add == true){
+            if (input.size() < 4){
+                sendReply(client.getClientSocketfd(), ERR_NEEDMOREPARAMS(input[0]));
+                return;
+            }
+            channel->set_pass_flag(add);
+            channel->setPass(input[3]);
+        }
+        else {
+            channel->set_pass_flag(add);
+            channel->setPass("");
+        }
+    }
+    if (mode[2] == "o"){
+        if (input.size() < 4){
+            sendReply(client.getClientSocketfd(), ERR_NEEDMOREPARAMS(input[0]));
+            return;
+        }
+        Client *taget = getClient(input[3]);
+        if (!target || !channel->inChannel(*target)) {
+            sendReply(client.getClientSocketfd(), ERR_USERNOTINCHANNEL(input[3], input[1]));
+            return;
+        }
+        if (add){
+            channel->admines.push_back(*target);
+        }
+        else {
+            channel->RemoveOperator(*target);
+        }
+    }
+    if (mode[2] == "l"){
+        if (add){
+            if (input.size() < 4){
+                sendReply(client.getClientSocketfd(), ERR_NEEDMOREPARAMS(input[0]));
+                return;
+            }
+            int limit = 0;
+            bool valid = true;
+            if (!limitStr.empty()){
+                for (size_t i = 0; i < limitStr.size(); ++i){
+                    if (!isdigit(limitStr[i])){
+                        valid = false;
+                        break ;
+                    }
+                }
+            }
+        }
+        else {
+            channel->setUserLimit(0);
+            channel->set_UserLimitFlag(false);
+        }
+    }
+}
+
+
+void  Server::treating_commands(Client *client){
+        std::string buffer = client->getBUFFER();
         eraser_samenewlines(buffer);
-        std::cout << buffer << std::endl;
         std::vector<std::string> input = split(buffer);
-        if (input[0] == "PASS")
-            //do PASS
-            ;
-        else if (input[0] == "NICK")
-            //do NICK
-            ;
-        else if (input[0] == "USER")
-            //do USER
-            ;
-        else if (input[0] == "JOIN")
-            //do JOIN
-            ;
-        else if (input[0] == "KICK")
-            //do KICK
-            ;
+        // if (input[0] == "JOIN")
+        //     //do JOIN
+        //     ;
+        if (input.empty())
+            return ;
+        if (input[0] == "KICK")
+            Kick(*client, input, buffer);
         else if (input[0] == "INVITE")
-            //do INVITE
-            ;
+            Invite(*client, input);
         else if (input[0] == "TOPIC")
-            //do TOPIC
-            ;
+            Topic(*client, input, buffer);
         else if (input[0] == "MODE")
-            //do MODE
-            ;
-        else if (input[0] == "PRIVMSG")
-            //do PRIVMSG
-            ;
+            Mode(*client, input, buffer);
+        else {
+            sendReply(client->getClientSocketfd(), ERR_UNKNOWNCOMMAND(client->getName(), input[0]));
+            return ;
+        }
+        // else if (input[0] == "PRIVMSG")
+        //     //do PRIVMSG
+        //     ;
         // if (!clint->getisRegistered()){
         //     if (clint->gethasPass() && std::strncmp(buffer.c_str(), "PASS ", 5) == 0)
         //         PASS_cmd(clint, buffer);

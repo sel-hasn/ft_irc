@@ -1,17 +1,29 @@
+#pragma once
+
 #include "Server.hpp"
+#include "Client.hpp"
+
+class Client;
 
 class Channel
 {
     private:
-        std::string chan_name;
-        std::string password;
+        std::string Name;
+        std::string Pass;
+        std::string topic;
         bool pass_flag;
+        bool TopicProtected;
+        time_t TopicsetAtime;
+        std::string howsetTopic;
+        bool InviteOnly;
+        bool UserLimitFlag;
+        int UserLimit;
     public:
 
         std::vector<Client> members;
         std::vector<Client> admines;
 
-        Channel() : chan_name(""), password(""), pass_flag(false){}
+        Channel() : Name(""), Pass(""), topic(""), pass_flag(false), InviteOnly(false), TopicProtected(false){}
 
         Channel(const Channel &other)
         {
@@ -22,36 +34,126 @@ class Channel
         {
             if (this == &other)
                 return (*this);
-            this->chan_name = other.chan_name;
-            this->password = other.password;
+            this->Name = other.Name;
+            this->Pass = other.Pass;
             this->pass_flag = other.pass_flag;
+            this->TopicProtected = other.TopicProtected;
             return (*this);
         }
         ~Channel(){}
-
-        void set_chan_name(std::string name)
+        void set_UserLimitFlag(bool _UserLimitFlag)
         {
-            chan_name = name;
+            UserLimitFlag = _UserLimitFlag;
         }
-        void set_password(std::string pass)
+        bool get_UserLimitFlag()
         {
-            password = pass;
+            return UserLimitFlag;
+        }
+        void setUserLimit(int _UserLimit)
+        {
+            UserLimit = _UserLimit;
+        }
+        int getUserLimit()
+        {
+            return UserLimit;
+        }
+        void setInviteOnly(bool _InviteOnly)
+        {
+            InviteOnly = _InviteOnly;
+        }
+        bool getInviteOnly()
+        {
+            return InviteOnly;
+        }
+        void sethowsetTopic(std::string _howsetTopic)
+        {
+            howsetTopic = _howsetTopic;
+        }
+        std::string gethowsetTopic()
+        {
+            return howsetTopic;
+        }
+        void setTopicsetAtime(time_t _TopicsetAtime)
+        {
+            TopicsetAtime = _TopicsetAtime;
+        }
+        time_t getTopicsetAtime()
+        {
+            return TopicsetAtime;
+        }
+        void setTopicProtected(bool Protected)
+        {
+            TopicProtected = Protected;
+        }
+        bool getTopicProtected()
+        {
+            return TopicProtected;
+        }
+        void setTopic(std::string _topic)
+        {
+            topic = _topic;
+        }
+        std::string getTopic()
+        {
+            return topic;
+        }
+        void setName(std::string name)
+        {
+            Name = name;
+        }
+        void setPass(std::string pass)
+        {
+            Pass = pass;
         }
         void set_pass_flag(bool h)
         {
             pass_flag = h;
         }
 
-        std::string get_chan_name()
+        std::string getName()
         {
-            return (chan_name);
+            return (Name);
         }
-        std::string get_password()
+        std::string getPass()
         {
-            return (password);
+            return (Pass);
         }
         int get_pass_flag()
         {
             return (pass_flag);
+        }
+        bool inChannel(Client user)
+        {
+            for (size_t i = 0; i < members.size(); ++i){
+                if (members[i].getName() == user.getName()){
+                    return true;
+                }
+            }
+            return false;
+        }
+        bool isOperator(Client user)
+        {
+            for (size_t i = 0; i < admines.size(); ++i){
+                if (admines[i].getName() == user.getName()){
+                    return true;
+                }
+            }
+            return false;
+        }
+        void RemoveMember(Client user)
+        {
+            for (size_t i = 0; i < members.size(); ++i){
+                if (members[i].getName() == user.getName()){
+                    members.erase(members.begin() + i);
+                }
+            }
+        }
+        void RemoveOperator(Client user)
+        {
+            for (size_t i = 0; i < admines.size(); ++i){
+                if (admines[i].getName() == user.getName()){
+                    admines.erase(admines.begin() + i);
+                }
+            }
         }
 };

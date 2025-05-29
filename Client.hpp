@@ -32,6 +32,10 @@ class Client{
 
         std::string getBUFFER() const { return BUFFER; }
 
+        std::string getHostname() {
+            return Name + "!" + UserName + "@localhost";
+        }
+
         bool getisRegistered() const{ return isRegistered; } 
 
         int  getClientSocketfd() const{  return ClientSocketfd; }
@@ -93,7 +97,7 @@ class Client{
             return *this;
         };
         Client(){
-            Name = "default";
+            Name = "defaultNick";
             Pass = "";
             realName = "de-real";
             UserName = "user-real";

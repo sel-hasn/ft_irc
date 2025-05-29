@@ -18,7 +18,14 @@
 #include <sstream> 
 #include "CustomException.hpp"
 #include "Client.hpp"
+#include "Channel.hpp"
 #include <poll.h>
+#include "Replies.hpp"
+#include <ctime>
+
+
+class Client;
+class Channel;
 
 class Server{
     private:
@@ -28,6 +35,7 @@ class Server{
     int                     Port;
     std::string             PassWord;
     std::vector<Client>     Clients;
+    std::vector<Channel>    Channels;
     std::vector<pollfd>     PollFDs;
     sockaddr_in             SAddress;
     
@@ -57,9 +65,18 @@ class Server{
         void                    ServerStarts();
         static void             Signals_handler(int signum);
         Client*                 getClient(int fd);
+        Client*                 getClient(std::string name);
         void                    erasing_fd_from_vecteurs(int fd);
-};
 
+        Channel *getChannel(std::string name);
+
+        //COMANDS
+
+        void Kick(Client client, std::vector<std::string> input, std::string buffer);
+        void Invite(Client client, std::vector<std::string> input);
+        void Topic(Client client, std::vector<std::string> input, std::string buffer);
+        void Mode(Client client, std::vector<std::string> input, std::string buffer);
+};
 
 int ParsePort(const std::string& av1);
 void PasswordParse(std::string av2);
