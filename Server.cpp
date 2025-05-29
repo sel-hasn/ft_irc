@@ -476,6 +476,11 @@ void Server::Mode(Client client, std::vector<std::string> input, std::string buf
                     }
                 }
             }
+            if (limitStr.empty()){
+                channel->setUserLimit(0);
+                channel->set_UserLimitFlag(true);
+            }
+                
         }
         else {
             channel->setUserLimit(0);
