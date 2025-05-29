@@ -468,6 +468,10 @@ void Server::Mode(Client client, std::vector<std::string> input, std::string buf
             }
             int limit = 0;
             bool valid = true;
+            std::string limitStr = input[3];
+            if (limitStr.empty()){
+                return ;
+            }
             if (!limitStr.empty()){
                 for (size_t i = 0; i < limitStr.size(); ++i){
                     if (!isdigit(limitStr[i])){
@@ -476,17 +480,23 @@ void Server::Mode(Client client, std::vector<std::string> input, std::string buf
                     }
                 }
             }
-            if (limitStr.empty()){
-                channel->setUserLimit(0);
-                channel->set_UserLimitFlag(true);
-            }
-                
+            if (valid)
+            {
+                limit = std::atoi(limitStr.c_str());
+                if (limit >= 0)
+                {
+                    channel->setUserLimit(limit);
+                    channel->set_UserLimitFlag(true);
+                }
+            }   
         }
         else {
             channel->setUserLimit(0);
             channel->set_UserLimitFlag(false);
         }
     }
+    else 
+        sendReply(client.getClientSocketfd(), ERR_UNKNOWNMODE(client.getName(), input[1], input[2]));
 }
 
 
