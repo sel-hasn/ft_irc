@@ -507,6 +507,7 @@ void  Server::treating_commands(Client *client){
         // if (input[0] == "JOIN")
         //     //do JOIN
         //     ;
+        
         if (input.empty())
             return ;
         if (input[0] == "KICK")
