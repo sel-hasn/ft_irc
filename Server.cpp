@@ -314,7 +314,7 @@ void Server::Invite(Client client, std::vector<std::string> input)
         sendReply(client.getClientSocketfd(), ERR_CHANOPRIVSNEEDED(input[2]));
         return ;
     }
-    sendReply(channel->members[i].getClientSocketfd(), RPL_INVITING(client.getName(), toInviteClient->getName(), channel->getName()));
+    sendReply(client.getClientSocketfd(), RPL_INVITING(client.getName(), toInviteClient->getName(), channel->getName()));
     std::string reply = ":" + client.getHostname() + " INVITE " + toInviteClient->getName() + " " + channel->getName() + " :\r\n";
     channel->members.push_back(*toInviteClient);
     for (size_t i = 0; i < channel->members.size(); ++i)
@@ -377,7 +377,7 @@ void Server::Topic(Client client, std::vector<std::string> input, std::string bu
     }
 }
 
-void Server::Mode(Client client, std::vector<std::string> input, std::string buffer)
+void Server::Mode(Client client, std::vector<std::string> input)
 {
     if (input.size() < 2)
     {
@@ -419,16 +419,19 @@ void Server::Mode(Client client, std::vector<std::string> input, std::string buf
         sendReply(client.getClientSocketfd(), ERR_UNKNOWNMODE(client.getName(), input[1], mode));
         return;
     }
+
     bool add;
-    if (mode[2] == "+")
+    
+    if (mode[0] == '+')
         add = true;
-    if (mode[2] == "-")
+    else if (mode[0] == '-')
         add = false;
-    if (mode[2] == "i")
-        channel->getInviteOnly(add);
-    if (mode[2] == "t")
-        channel->getTopicProtected(add);
-    if (mode[2] == "k")
+    
+    if (mode[1] == 'i')
+        channel->setInviteOnly(add);
+    else if (mode[1] == 't')
+        channel->setTopicProtected(add);
+    else if (mode[1] == 'k')
     {
         if (add == true){
             if (input.size() < 4){
@@ -443,12 +446,12 @@ void Server::Mode(Client client, std::vector<std::string> input, std::string buf
             channel->setPass("");
         }
     }
-    if (mode[2] == "o"){
+    else if (mode[1] == 'o'){
         if (input.size() < 4){
             sendReply(client.getClientSocketfd(), ERR_NEEDMOREPARAMS(input[0]));
             return;
         }
-        Client *taget = getClient(input[3]);
+        Client *target = getClient(input[3]);
         if (!target || !channel->inChannel(*target)) {
             sendReply(client.getClientSocketfd(), ERR_USERNOTINCHANNEL(input[3], input[1]));
             return;
@@ -460,7 +463,7 @@ void Server::Mode(Client client, std::vector<std::string> input, std::string buf
             channel->RemoveOperator(*target);
         }
     }
-    if (mode[2] == "l"){
+    else if (mode[1] == 'l'){
         if (add){
             if (input.size() < 4){
                 sendReply(client.getClientSocketfd(), ERR_NEEDMOREPARAMS(input[0]));
@@ -517,7 +520,7 @@ void  Server::treating_commands(Client *client){
         else if (input[0] == "TOPIC")
             Topic(*client, input, buffer);
         else if (input[0] == "MODE")
-            Mode(*client, input, buffer);
+            Mode(*client, input);
         else {
             sendReply(client->getClientSocketfd(), ERR_UNKNOWNCOMMAND(client->getName(), input[0]));
             return ;

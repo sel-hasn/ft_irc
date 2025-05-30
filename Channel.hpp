@@ -12,18 +12,19 @@ class Channel
         std::string Pass;
         std::string topic;
         bool pass_flag;
-        bool TopicProtected;
-        time_t TopicsetAtime;
-        std::string howsetTopic;
         bool InviteOnly;
+        bool TopicProtected;
         bool UserLimitFlag;
         int UserLimit;
+        time_t TopicsetAtime;
+        std::string howsetTopic;
     public:
 
         std::vector<Client> members;
         std::vector<Client> admines;
 
-        Channel() : Name(""), Pass(""), topic(""), pass_flag(false), InviteOnly(false), TopicProtected(false){}
+        Channel() : Name(""), Pass(""), topic(""), pass_flag(false), InviteOnly(false), TopicProtected(false)
+        , UserLimitFlag(false), UserLimit(0){}
 
         Channel(const Channel &other)
         {

@@ -75,7 +75,7 @@ class Server{
         void Kick(Client client, std::vector<std::string> input, std::string buffer);
         void Invite(Client client, std::vector<std::string> input);
         void Topic(Client client, std::vector<std::string> input, std::string buffer);
-        void Mode(Client client, std::vector<std::string> input, std::string buffer);
+        void Mode(Client client, std::vector<std::string> input);
 };
 
 int ParsePort(const std::string& av1);
