@@ -6,7 +6,7 @@ NAME= ircserv
 CPPFLAGS= -Wall -Wextra -Werror -g -std=c++98 -fsanitize=address
 
 SRC= main.cpp Server.cpp CustomException.cpp Parse_PortPW.cpp commands/Invite.cpp  commands/Kick.cpp \
- commands/Mode.cpp  commands/Topic.cpp
+ commands/Mode.cpp  commands/Topic.cpp utils.cpp Authntication.cpp
 
 OBJS= $(SRC:%.cpp=%.o)
 

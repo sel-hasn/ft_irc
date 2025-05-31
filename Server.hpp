@@ -57,8 +57,9 @@ class Server{
         void                    setServerSocketFD(int newfd) { ServerSocketFD = newfd; };
 
         void                    PASS_cmd(Client *clint, std::string &buffer);
+        void                    NICK_cmd(Client *clint, std::string &buffer);
+        void                    USER_cmd(Client *clint, std::string &buffer);
         void                    treating_commands(Client *clint);
-        void                    newClientRegister(Client *clint);
         void                    handleClientData(Client *clint);
         void                    sendReply(int cSockfd, std::string message);
         void                    handleNewClient();
@@ -80,5 +81,7 @@ class Server{
 
 int ParsePort(const std::string& av1);
 void PasswordParse(std::string av2);
+std::vector<std::string> split(const std::string& str);
+void eraser_samenewlines(std::string& receivedData);
 
 #endif
