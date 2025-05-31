@@ -1,4 +1,4 @@
-#include "Server.hpp"
+#include "../Server.hpp"
 
 void Server::Kick(Client client, std::vector<std::string> input, std::string buffer)
 {
@@ -39,6 +39,7 @@ void Server::Kick(Client client, std::vector<std::string> input, std::string buf
         }
         sendReply(toKickclient->getClientSocketfd(), reply);
         if (channel->isOperator(*toKickclient)){
+            std::cout << "here \n";
             channel->RemoveMember(*toKickclient);
             channel->RemoveOperator(*toKickclient);
         }

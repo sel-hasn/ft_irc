@@ -154,7 +154,6 @@ void    Server::ServerStarts(){
                         handleClientData(getClient(PollFDs[i].fd));
                     }
                     catch(...){}
-                    std::cout<<"very Good\n";
                 }
             }
         }

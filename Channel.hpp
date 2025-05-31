@@ -146,6 +146,7 @@ class Channel
             for (size_t i = 0; i < members.size(); ++i){
                 if (members[i].getName() == user.getName()){
                     members.erase(members.begin() + i);
+                    break ;
                 }
             }
         }
@@ -154,6 +155,7 @@ class Channel
             for (size_t i = 0; i < admines.size(); ++i){
                 if (admines[i].getName() == user.getName()){
                     admines.erase(admines.begin() + i);
+                    break ;
                 }
             }
         }

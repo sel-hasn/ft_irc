@@ -1,4 +1,4 @@
-#include "Server.hpp"
+#include "../Server.hpp"
 
 void Server::Invite(Client client, std::vector<std::string> input)
 {
@@ -7,7 +7,7 @@ void Server::Invite(Client client, std::vector<std::string> input)
         sendReply(client.getClientSocketfd(), ERR_NEEDMOREPARAMS(input[0]));
         return ;
     }
-    Channel *channel = getChannel(input[1]);
+    Channel *channel = getChannel(input[2]);
     if (!channel){
         sendReply(client.getClientSocketfd(), ERR_NOSUCHCHANNEL(input[2]));
         return ;
@@ -32,7 +32,7 @@ void Server::Invite(Client client, std::vector<std::string> input)
         return ;
     }
     sendReply(client.getClientSocketfd(), RPL_INVITING(client.getName(), toInviteClient->getName(), channel->getName()));
-    std::string reply = ":" + client.getHostname() + " INVITE " + toInviteClient->getName() + " " + channel->getName() + " :\r\n";
+    std::string reply = ":" + client.getHostname() + " INVITE " + toInviteClient->getName() + " " + channel->getName() + "\r\n";
     channel->members.push_back(*toInviteClient);
     for (size_t i = 0; i < channel->members.size(); ++i)
     {

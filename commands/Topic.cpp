@@ -1,4 +1,4 @@
-#include "Server.hpp"
+#include "../Server.hpp"
 
 std::string toString(time_t val) {
     std::stringstream ss;

@@ -1,4 +1,4 @@
-#include "Server.hpp"
+#include "../Server.hpp"
 
 void Server::Mode(Client client, std::vector<std::string> input)
 {
