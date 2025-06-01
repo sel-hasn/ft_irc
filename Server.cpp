@@ -65,6 +65,10 @@ void    Server::ServerStarts(){
 
     while (!Signal){
         if ((poll(PollFDs.data(), PollFDs.size(), -1) == -1) && !Signal){
+            if (errno == EINTR)
+            {
+
+            }
             throw CustomException("ServerStarts() : Poll( ) failed.");
         }
         for (size_t i = 0; i < PollFDs.size(); ++i) {
@@ -189,15 +193,15 @@ void Server::handleClientData(Client *clint){
         case (-1):{
             const char *msg = "an issue appeared !\n";
             send(clint->getClientSocketfd(), msg, 21, 0);
-            erasing_fd_from_vecteurs(clint->getClientSocketfd());
             close(clint->getClientSocketfd());
+            erasing_fd_from_vecteurs(clint->getClientSocketfd());
             return ;
         }
         case (0):{
             const char *msg = "u re disconnected !\n";
-            send(clint->getClientSocketfd(), msg, sizeof(msg), 0);
-            erasing_fd_from_vecteurs(clint->getClientSocketfd());
+            send(clint->getClientSocketfd(), msg, 21, 0);
             close(clint->getClientSocketfd());
+            erasing_fd_from_vecteurs(clint->getClientSocketfd());
             return ;
         }
         default:{

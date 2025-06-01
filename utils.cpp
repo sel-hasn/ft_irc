@@ -63,11 +63,11 @@ std::vector<std::string> split(const std::string& str) {
 
 
 void Server:: erasing_fd_from_vecteurs(int fd){
-    for (size_t i = 0; i < Clients.size(); i++)
-    {
-        if (Clients[i].getClientSocketfd() == fd)
-            Clients.erase(Clients.begin() + i);
-    }
+    // for (size_t i = 0; i < Clients.size(); i++)
+    // {
+    //     if (Clients[i].getClientSocketfd() == fd)
+    //         Clients.erase(Clients.begin() + i);
+    // }
     for (size_t i = 1; i < PollFDs.size(); i++)
     {
         if (PollFDs[i].fd == fd)
