@@ -143,31 +143,30 @@ void  Server::treating_commands(Client *client){
     if (buffer.length() == 0)
         return ;
     std::vector<std::string> input = split(buffer);
+    if (!client->gethasPass() && input[0] != "PASS"){
+        sendReply(client->getClientSocketfd(), ERR_NOTREGISTERED);
+        erasing_fd_from_vecteurs(client->getClientSocketfd());
+        close(client->getClientSocketfd());
+    }
     if (input[0] == "PASS")
         PASS_cmd(client, buffer);
-    else if (client->gethasPass()){
-        if (input[0] == "NICK")
-            NICK_cmd(client, buffer);
-        else if (input[0] == "USER")
-            USER_cmd(client, buffer);
-        else if (input[0] == "KICK")
-            Kick(*client, input, buffer);
-        else if (input[0] == "INVITE")
-            Invite(*client, input);
-        else if (input[0] == "TOPIC")
-            Topic(*client, input, buffer);
-        else if (input[0] == "MODE")
-            Mode(*client, input);
-        else {
-            sendReply(client->getClientSocketfd(), ERR_UNKNOWNCOMMAND(client->getName(), input[0]));
-            return ;
-        }
+    
+    else if (input[0] == "NICK")
+        NICK_cmd(client, buffer);
+    else if (input[0] == "USER")
+        USER_cmd(client, buffer);
+    else if (input[0] == "KICK")
+        Kick(*client, input, buffer);
+    else if (input[0] == "INVITE")
+        Invite(*client, input);
+    else if (input[0] == "TOPIC")
+        Topic(*client, input, buffer);
+    else if (input[0] == "MODE")
+        Mode(*client, input);
+    else {
+        sendReply(client->getClientSocketfd(), ERR_UNKNOWNCOMMAND(client->getName(), input[0]));
+        return ;
     }
-    // else{
-    //     sendReply(client->getClientSocketfd(), ERR_NOTREGISTERED);
-    //     erasing_fd_from_vecteurs(client->getClientSocketfd());
-    //     close(client->getClientSocketfd());
-    // }
 }
 
 void Server::handleClientData(Client *clint){

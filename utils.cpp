@@ -23,6 +23,8 @@ void Server::Signals_handler(int signum){
 }
 
 Client* Server::getClient(int fd){
+    if (Clients.size() == 0)
+        return ;
     for(size_t i = 0; i < Clients.size(); i++){
         if (Clients[i].getClientSocketfd() == fd){
             return &Clients[i];
@@ -32,11 +34,13 @@ Client* Server::getClient(int fd){
 }
 
 void eraser_samenewlines(std::string& receivedData){
+    if (receivedData.length() == 0)
+        return ;
     for (size_t i = 0; i < receivedData.length(); ) {
         if (receivedData[i] == '\n' || receivedData[i] == '\r')
             receivedData.erase(i, 1);
         else
-            ++i;
+            i++;
     }
 }
 
