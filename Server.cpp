@@ -143,6 +143,15 @@ void  Server::treating_commands(Client *client){
     if (buffer.length() == 0)
         return ;
     std::vector<std::string> input = split(buffer);
+    if (!client->gethasPass() && !input.size()){
+        sendReply(client->getClientSocketfd(), ERR_NOTREGISTERED);
+        erasing_fd_from_vecteurs(client->getClientSocketfd());
+        close(client->getClientSocketfd());
+        return ;
+    }
+    if (client->gethasPass() && !input.size()){
+        return ;
+    }
     if (!client->gethasPass() && input[0] != "PASS"){
         sendReply(client->getClientSocketfd(), ERR_NOTREGISTERED);
         erasing_fd_from_vecteurs(client->getClientSocketfd());
@@ -179,13 +188,15 @@ void Server::handleClientData(Client *clint){
     {
         case (-1):{
             const char *msg = "an issue appeared !\n";
-            send(clint->getClientSocketfd(), msg, sizeof(msg), 0);
+            send(clint->getClientSocketfd(), msg, 21, 0);
+            erasing_fd_from_vecteurs(clint->getClientSocketfd());
             close(clint->getClientSocketfd());
             return ;
         }
         case (0):{
             const char *msg = "u re disconnected !\n";
             send(clint->getClientSocketfd(), msg, sizeof(msg), 0);
+            erasing_fd_from_vecteurs(clint->getClientSocketfd());
             close(clint->getClientSocketfd());
             return ;
         }

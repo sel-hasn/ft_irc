@@ -24,7 +24,7 @@ void Server::Signals_handler(int signum){
 
 Client* Server::getClient(int fd){
     if (Clients.size() == 0)
-        return ;
+        return NULL;
     for(size_t i = 0; i < Clients.size(); i++){
         if (Clients[i].getClientSocketfd() == fd){
             return &Clients[i];
