@@ -7,28 +7,23 @@ void  Server::NICK_cmd(Client *clint, std::string &buffer){
         std::cerr << "Client sent invalid nickname args\n";
         return ;
     }
-    // if (clint->gethasName()){
-    //     sendReply(clint->getClientSocketfd(), ERR_ALREADYREGISTRED(ircName));
-    //     return;
-    // }
     if (splited[1].length() < 4 || splited[1].length() > 9) {
         sendReply(clint->getClientSocketfd(), ERR_NONICKNAMEGIVEN(splited[1]));
         std::cerr << "Client sent invalid nickname length\n";
         return ;
     }
-    if (splited[1][0] == ' ' || splited[1][0] == ':' || splited[1][0] == '#' || splited[1][0] == '&' || std::isdigit(splited[1][0])){
+    if (std::isspace(splited[1][0]) || splited[1][0] == ':' || splited[1][0] == '#' || splited[1][0] == '&' || std::isdigit(splited[1][0])){
         sendReply(clint->getClientSocketfd(), ERR_NOSUCHNICK(splited[1]));
-        std::cerr << "Client sent invalid nickname length\n";
+        std::cerr << "Client sent invalid nickname leadchar\n";
         return ;
     }
     for (size_t i = 0; i < splited[1].length(); i++ ) {
         if (!std::isalpha(splited[1][i]) && splited[1][i] != '-' && splited[1][i] != '_'){
-            sendReply(clint->getClientSocketfd(),  "ERROR :Invalid nickname with alpha and - and _ chars accepted only\n");
+            sendReply(clint->getClientSocketfd(),  ERR_NOSUCHNICK(splited[1]));
             std::cerr << "Client sent invalid nickname (chars invalid)\n";
             return ;
         }
     }
-    
     for (size_t i = 0; i < Clients.size(); i++) {
         if (Clients[i].getName() == splited[1]) {
             sendReply(clint->getClientSocketfd(), ERR_NICKNAMEINUSE(splited[1]));
@@ -52,15 +47,11 @@ void Server::PASS_cmd(Client *clint, std::string &buffer){
     std::vector<std::string> splited = split(buffer);
     if (splited.size() != 2){
         sendReply(clint->getClientSocketfd(), ERR_NEEDMOREPARAMS(splited[0]));
-        erasing_fd_from_vecteurs(clint->getClientSocketfd());
-        close(clint->getClientSocketfd());
         return ;
     }
     else{
         if (splited[1] != getPassword()){
             sendReply(clint->getClientSocketfd(), ERR_PASSWDMISMATCH(clint->getName()));
-            erasing_fd_from_vecteurs(clint->getClientSocketfd());
-            close(clint->getClientSocketfd());
             return ;
         }
         else{

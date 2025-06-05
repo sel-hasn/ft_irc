@@ -65,10 +65,6 @@ void    Server::ServerStarts(){
 
     while (!Signal){
         if ((poll(PollFDs.data(), PollFDs.size(), -1) == -1) && !Signal){
-            if (errno == EINTR)
-            {
-
-            }
             throw CustomException("ServerStarts() : Poll( ) failed.");
         }
         for (size_t i = 0; i < PollFDs.size(); ++i) {
@@ -89,7 +85,8 @@ void    Server::ServerStarts(){
             }
         }
     }
-    //close all sockets before leaving the door;
+    // close all sockets before leaving the door;
+    //my next step tomorrow in cha2a allah
 }
 
 void Server::handleNewClient(){
@@ -147,23 +144,17 @@ void  Server::treating_commands(Client *client){
     if (buffer.length() == 0)
         return ;
     std::vector<std::string> input = split(buffer);
-    if (!client->gethasPass() && !input.size()){
-        sendReply(client->getClientSocketfd(), ERR_NOTREGISTERED);
-        erasing_fd_from_vecteurs(client->getClientSocketfd());
-        close(client->getClientSocketfd());
+    if (!client->gethasPass() && !input.size())
         return ;
-    }
     if (client->gethasPass() && !input.size()){
         return ;
     }
     if (!client->gethasPass() && input[0] != "PASS"){
         sendReply(client->getClientSocketfd(), ERR_NOTREGISTERED);
-        erasing_fd_from_vecteurs(client->getClientSocketfd());
-        close(client->getClientSocketfd());
+        return ;
     }
     if (input[0] == "PASS")
         PASS_cmd(client, buffer);
-    
     else if (input[0] == "NICK")
         NICK_cmd(client, buffer);
     else if (input[0] == "USER")
@@ -188,18 +179,20 @@ void Server::handleClientData(Client *clint){
     if (!clint)
         throw CustomException("client is not exist anymore\n");
     int bytesrecieved = recv(clint->getClientSocketfd(), buffer, 1023, 0);
+
     switch (bytesrecieved)
     {
         case (-1):{
-            const char *msg = "an issue appeared !\n";
-            send(clint->getClientSocketfd(), msg, 21, 0);
             close(clint->getClientSocketfd());
             erasing_fd_from_vecteurs(clint->getClientSocketfd());
             return ;
         }
         case (0):{
-            const char *msg = "u re disconnected !\n";
-            send(clint->getClientSocketfd(), msg, 21, 0);
+            std::cout << "a client has been disconnected !\n";
+            clint->sethasPass(false);
+            clint->sethasName(false);
+            clint->sethasrealName(false);
+            clint->sethasUname(false);
             close(clint->getClientSocketfd());
             erasing_fd_from_vecteurs(clint->getClientSocketfd());
             return ;

@@ -18,7 +18,7 @@
 #define ERR_NONICKNAMEGIVEN(target)                   PREFIX "431 " + target + " :No nickname given" POSTFIX 
 #define ERR_PASSWDMISMATCH(target)        PREFIX "464 " + target + " :Password incorrect" POSTFIX 
 #define ERR_ALREADYREGISTRED(target)        PREFIX "462 " + target + " :You may not reregister" POSTFIX 
-#define ERR_NOTREGISTERED        "Error: You are not registered."
+#define ERR_NOTREGISTERED        "Error: You are not registered.\r\n"
 #define ERR_CHANNELISFULL(client, channel)        PREFIX " 471 " + client + " " + channel + " :Cannot join channel (+l)" POSTFIX
 #define ERR_INVITEONLYCHAN(client, channel)        PREFIX " 473 " + client + " " + channel + " :Cannot join channel (+i)" POSTFIX
 #define ERR_NEEDMODEPARM(channelname, mode)        (std::string(": 696 ") + channelname + " * You must specify a parameter for the key mode. " + mode + POSTFIX)
