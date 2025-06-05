@@ -62,15 +62,29 @@ std::vector<std::string> split(const std::string& str) {
 }
 
 
-void Server:: erasing_fd_from_vecteurs(int fd){
-    // for (size_t i = 0; i < Clients.size(); i++)
-    // {
-    //     if (Clients[i].getClientSocketfd() == fd)
-    //         Clients.erase(Clients.begin() + i);
-    // }
+void Server:: erasing_fd_from_poll_vecteurs(int fd){
     for (size_t i = 1; i < PollFDs.size(); i++)
     {
         if (PollFDs[i].fd == fd)
             PollFDs.erase(PollFDs.begin() + i);
+    }
+}
+void Server:: erasing_fd_from_client_vecteurs(int fd){
+    for (size_t i = 0; i < Clients.size(); i++)
+    {
+        if (Clients[i].getClientSocketfd() == fd)
+            Clients.erase(Clients.begin() + i);
+    }
+}
+
+void Server:: server_ends(){
+    for (size_t i = PollFDs.size(); i; --i)
+    {
+        PollFDs.erase(PollFDs.begin() + i);
+    }
+    for (size_t i = Clients.size(); i; --i)
+    {
+        close(Clients[i].getClientSocketfd());
+        Clients.erase(Clients.begin() + i);
     }
 }

@@ -77,7 +77,7 @@ void    Server::ServerStarts(){
                         handleClientData(getClient(PollFDs[i].fd));
                     }
                     catch(const CustomException& e){
-                        erasing_fd_from_vecteurs(PollFDs[i].fd);
+                        erasing_fd_from_poll_vecteurs(PollFDs[i].fd);
                         close(PollFDs[i].fd);
                         std::cout << "cought exception inside server's poll's func() :" << e.msg();
                     }
@@ -85,8 +85,7 @@ void    Server::ServerStarts(){
             }
         }
     }
-    // close all sockets before leaving the door;
-    //my next step tomorrow in cha2a allah
+    server_ends();
 }
 
 void Server::handleNewClient(){
@@ -184,7 +183,7 @@ void Server::handleClientData(Client *clint){
     {
         case (-1):{
             close(clint->getClientSocketfd());
-            erasing_fd_from_vecteurs(clint->getClientSocketfd());
+            erasing_fd_from_poll_vecteurs(clint->getClientSocketfd());
             return ;
         }
         case (0):{
@@ -194,7 +193,7 @@ void Server::handleClientData(Client *clint){
             clint->sethasrealName(false);
             clint->sethasUname(false);
             close(clint->getClientSocketfd());
-            erasing_fd_from_vecteurs(clint->getClientSocketfd());
+            erasing_fd_from_poll_vecteurs(clint->getClientSocketfd());
             return ;
         }
         default:{
@@ -206,5 +205,4 @@ void Server::handleClientData(Client *clint){
 }
 
 Server::~Server(){
-    // need to close all sockets && connections between server and clients !
 }

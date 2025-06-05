@@ -67,7 +67,9 @@ class Server{
         static void             Signals_handler(int signum);
         Client*                 getClient(int fd);
         Client*                 getClient(std::string name);
-        void                    erasing_fd_from_vecteurs(int fd);
+        void                    erasing_fd_from_poll_vecteurs(int fd);
+        void                    erasing_fd_from_client_vecteurs(int fd);
+        void                    server_ends();
 
         Channel *getChannel(std::string name);
 
