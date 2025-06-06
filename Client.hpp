@@ -92,7 +92,17 @@ class Client{
         Client& operator=(const Client& other){
             if (this != &other){
                 this->setBuff(other.getBUFFER());
-                // this->
+                this->setClientsock(other.getClientSocketfd());
+                this->sethasPass(other.gethasPass());
+                this->sethasUname(other.gethasUserName());
+                this->sethasName(other.gethasName());
+                this->sethasrealName(other.gethasrealname());
+                this->setName(other.getName());
+                this->setPass(other.getPass());
+                this->setrealName(other.getrealName());
+                this->setUserName(other.getUserName());
+                this->setRegister(other.getisRegistered());
+                this->setClientAddress(other.getClientAddress());
             }
             return *this;
         };

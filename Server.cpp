@@ -67,23 +67,33 @@ void    Server::ServerStarts(){
         if ((poll(PollFDs.data(), PollFDs.size(), -1) == -1) && !Signal){
             throw CustomException("ServerStarts() : Poll( ) failed.");
         }
-        for (size_t i = 0; i < PollFDs.size(); ++i) {
+        if (PollFDs[0].revents & POLLIN)
+            handleNewClient();
+        for (size_t i = 1; i < PollFDs.size(); i++) {
             if (PollFDs[i].revents & POLLIN) {
-                if (PollFDs[i].fd == ServerSocketFD)
-                    handleNewClient(); // accepting clients
-                else
-                {
-                    try{
-                        handleClientData(getClient(PollFDs[i].fd));
-                    }
-                    catch(const CustomException& e){
-                        erasing_fd_from_poll_vecteurs(PollFDs[i].fd);
-                        close(PollFDs[i].fd);
-                        std::cout << "cought exception inside server's poll's func() :" << e.msg();
-                    }
+                int tmp = PollFDs[i].fd;
+                std::cout << "Handling client data for fd: " << tmp << std::endl;
+                try{
+                    handleClientData(tmp);
+                }
+                catch(const CustomException& e){
+                    std::cout << "cought exception inside server's poll's func() :" << e.msg();
+                    close(tmp);
+                    erasing_fd_from_client_vecteurs(tmp);
+                    erasing_fd_from_poll_vecteurs(tmp);
                 }
             }
         }
+        std::cout << "CLients size is : " << Clients.size() << " || CLients vecteur : ";
+        for(size_t i = 0; i < Clients.size(); i++){
+            std::cout << Clients[i].getClientSocketfd() << " ";
+        }
+        std::cout << std::endl;
+        std::cout << "PollFDS size is : " << PollFDs.size() << " || PollFDS vecteur : ";
+        for(size_t i = 0; i < PollFDs.size(); i++){
+            std::cout << PollFDs[i].fd << " ";
+        }
+        std::cout << std::endl;
     }
     server_ends();
 }
@@ -112,89 +122,37 @@ void Server::handleNewClient(){
     newClient.setClientsock(client_fd);
     newClient.setClientAddress(client_addr);
     newClient.setRegister(false);
+    Clients.push_back(newClient);
 
     std::stringstream ss;
     ss << "defaultNick" << Clients.size() + 1;  // e.g., defaultNick1, defaultNick2, ...
     newClient.setName(ss.str());
 
-    Clients.push_back(newClient);
 
     Channels[0].members.push_back(newClient);
     Channels[0].admines.push_back(newClient);
 
-    std::cout << "New client connected: " << client_fd << std::endl;
+    std::cout << "New client connected: " << newClient.getClientSocketfd() << std::endl;
 }
 
-Channel* Server::getChannel(std::string name)
-{
-    for (size_t i = 0; i < Channels.size(); i++) {
-        if (Channels[i].getName() == name) {
-            return &Channels[i];
-        }
-    }
-    return NULL;
-}
-
-void  Server::treating_commands(Client *client){
-    if (client->getBUFFER().length() == 0)
-        return ;
-    std::string buffer = client->getBUFFER();
-    eraser_samenewlines(buffer);
-    if (buffer.length() == 0)
-        return ;
-    std::vector<std::string> input = split(buffer);
-    if (!client->gethasPass() && !input.size())
-        return ;
-    if (client->gethasPass() && !input.size()){
-        return ;
-    }
-    if (!client->gethasPass() && input[0] != "PASS"){
-        sendReply(client->getClientSocketfd(), ERR_NOTREGISTERED);
-        return ;
-    }
-    if (input[0] == "PASS")
-        PASS_cmd(client, buffer);
-    else if (input[0] == "NICK")
-        NICK_cmd(client, buffer);
-    else if (input[0] == "USER")
-        USER_cmd(client, buffer);
-    else if (input[0] == "KICK")
-        Kick(*client, input, buffer);
-    else if (input[0] == "INVITE")
-        Invite(*client, input);
-    else if (input[0] == "TOPIC")
-        Topic(*client, input, buffer);
-    else if (input[0] == "MODE")
-        Mode(*client, input);
-    else {
-        sendReply(client->getClientSocketfd(), ERR_UNKNOWNCOMMAND(client->getName(), input[0]));
-        return ;
-    }
-}
-
-void Server::handleClientData(Client *clint){
+void Server::handleClientData(int fd){
     char    buffer[1024];
     std::memset(buffer, 0, 1024);
+    Client *clint = getClient_byfd(fd);
     if (!clint)
-        throw CustomException("client is not exist anymore\n");
+        throw CustomException(" client is not exist anymore\n");
     int bytesrecieved = recv(clint->getClientSocketfd(), buffer, 1023, 0);
-
     switch (bytesrecieved)
     {
         case (-1):{
-            close(clint->getClientSocketfd());
-            erasing_fd_from_poll_vecteurs(clint->getClientSocketfd());
-            return ;
+            throw CustomException(" Issue\n");
         }
         case (0):{
-            std::cout << "a client has been disconnected !\n";
             clint->sethasPass(false);
             clint->sethasName(false);
             clint->sethasrealName(false);
             clint->sethasUname(false);
-            close(clint->getClientSocketfd());
-            erasing_fd_from_poll_vecteurs(clint->getClientSocketfd());
-            return ;
+            throw CustomException(" client is disconnecting\n");
         }
         default:{
             clint->setBuff(std::string(buffer));
@@ -205,4 +163,17 @@ void Server::handleClientData(Client *clint){
 }
 
 Server::~Server(){
+    std::cout << "Server ends gracefully.\n";
+    std::cout << "Final state of server:\n";
+    std::cout << "CLients size is : " << Clients.size() << " || CLients vecteur : ";
+    for(size_t i = 0; i < Clients.size(); i++){
+        std::cout << Clients[i].getClientSocketfd() << " ";
+    }
+    std::cout << std::endl;
+    std::cout << "PollFDS size is : " << PollFDs.size() << " || PollFDS vecteur : ";
+    for(size_t i = 0; i < PollFDs.size(); i++){
+        std::cout << PollFDs[i].fd << " ";
+    }
+    std::cout << std::endl;
+    close(ServerSocketFD);
 }

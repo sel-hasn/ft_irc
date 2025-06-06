@@ -60,12 +60,12 @@ class Server{
         void                    NICK_cmd(Client *clint, std::string &buffer);
         void                    USER_cmd(Client *clint, std::string &buffer);
         void                    treating_commands(Client *clint);
-        void                    handleClientData(Client *clint);
+        void                    handleClientData(int fd);
         void                    sendReply(int cSockfd, std::string message);
         void                    handleNewClient();
         void                    ServerStarts();
         static void             Signals_handler(int signum);
-        Client*                 getClient(int fd);
+        Client*                 getClient_byfd(int fd);
         Client*                 getClient(std::string name);
         void                    erasing_fd_from_poll_vecteurs(int fd);
         void                    erasing_fd_from_client_vecteurs(int fd);

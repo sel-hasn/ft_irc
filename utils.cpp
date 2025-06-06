@@ -4,6 +4,16 @@ void    Server::sendReply(int cSocketfd, std::string message){
     send(cSocketfd, message.c_str(), message.length(), 0);
 }
 
+Channel* Server::getChannel(std::string name)
+{
+    for (size_t i = 0; i < Channels.size(); i++) {
+        if (Channels[i].getName() == name) {
+            return &Channels[i];
+        }
+    }
+    return NULL;
+}
+
 Server::Server(const Server& other){
     (void) other;
 }
@@ -22,7 +32,7 @@ void Server::Signals_handler(int signum){
 	Server::Signal = true;
 }
 
-Client* Server::getClient(int fd){
+Client* Server::getClient_byfd(int fd){
     if (Clients.size() == 0)
         return NULL;
     for(size_t i = 0; i < Clients.size(); i++){
@@ -65,26 +75,68 @@ std::vector<std::string> split(const std::string& str) {
 void Server:: erasing_fd_from_poll_vecteurs(int fd){
     for (size_t i = 1; i < PollFDs.size(); i++)
     {
-        if (PollFDs[i].fd == fd)
+        if (PollFDs[i].fd == fd){
             PollFDs.erase(PollFDs.begin() + i);
+            break ;
+        }
     }
 }
 void Server:: erasing_fd_from_client_vecteurs(int fd){
     for (size_t i = 0; i < Clients.size(); i++)
     {
-        if (Clients[i].getClientSocketfd() == fd)
+        if (Clients[i].getClientSocketfd() == fd){
             Clients.erase(Clients.begin() + i);
+            break ;
+        }
     }
 }
 
 void Server:: server_ends(){
-    for (size_t i = PollFDs.size(); i; --i)
+    for (;PollFDs.size() > 0;)
     {
-        PollFDs.erase(PollFDs.begin() + i);
+        PollFDs.erase(PollFDs.begin());
     }
-    for (size_t i = Clients.size(); i; --i)
+    for (;Clients.size() > 0;)
     {
-        close(Clients[i].getClientSocketfd());
-        Clients.erase(Clients.begin() + i);
+        close(Clients[0].getClientSocketfd());
+        Clients.erase(Clients.begin());
+    }
+    close(ServerSocketFD);
+}
+
+void  Server::treating_commands(Client *client){
+    if (client->getBUFFER().length() == 0)
+        return ;
+    std::string buffer = client->getBUFFER();
+    eraser_samenewlines(buffer);
+    if (buffer.length() == 0)
+        return ;
+    std::vector<std::string> input = split(buffer);
+    if (!client->gethasPass() && !input.size())
+        return ;
+    if (client->gethasPass() && !input.size()){
+        return ;
+    }
+    if (!client->gethasPass() && input[0] != "PASS"){
+        sendReply(client->getClientSocketfd(), ERR_NOTREGISTERED);
+        return ;
+    }
+    if (input[0] == "PASS")
+        PASS_cmd(client, buffer);
+    else if (input[0] == "NICK")
+        NICK_cmd(client, buffer);
+    else if (input[0] == "USER")
+        USER_cmd(client, buffer);
+    else if (input[0] == "KICK")
+        Kick(*client, input, buffer);
+    else if (input[0] == "INVITE")
+        Invite(*client, input);
+    else if (input[0] == "TOPIC")
+        Topic(*client, input, buffer);
+    else if (input[0] == "MODE")
+        Mode(*client, input);
+    else {
+        sendReply(client->getClientSocketfd(), ERR_UNKNOWNCOMMAND(client->getName(), input[0]));
+        return ;
     }
 }
