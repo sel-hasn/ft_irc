@@ -16,15 +16,14 @@ void Server::Privmsg(Client client, std::vector<std::string> input)
 	if (input[1][0] == '#')
 	{
 		std::vector<Channel>::iterator it = Channels.begin();
-		std::string holder(input[1].substr(1, input[1].size()));
 		for (; it != Channels.end(); it++)
 		{
-			if (it->getName() == holder)
+			if (it->getName() == input[1])
 				break ;
 		}
 		if (it == Channels.end())
 		{
-			sendReply(client.getClientSocketfd(), ERR_NOSUCHCHANNEL(holder));
+			sendReply(client.getClientSocketfd(), ERR_NOSUCHCHANNEL(input[1]));
 		}
 		else if (it != Channels.end())
 		{
@@ -37,11 +36,6 @@ void Server::Privmsg(Client client, std::vector<std::string> input)
 				}
 			}
 		}
-	}
-	else if (input[1][0] == '$')
-	{
-		std::string holder = input[1].substr(1, input[1].size());
-		
 	}
 	else
 	{

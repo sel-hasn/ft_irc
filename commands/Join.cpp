@@ -41,7 +41,7 @@ void Server::Join(Client client, std::vector<std::string> input)
 		size_t j = 0;
 		for (; j < deff; j++)
 		{
-			str_keys.push_back("NO_PASS");
+			str_keys.push_back("");
 		}
 	}
 
@@ -70,11 +70,10 @@ void Server::Join(Client client, std::vector<std::string> input)
 		}
 		else
 		{
-			std::string name = it_name->c_str();
 			it = Channels.begin();
 			for (; it != Channels.end(); it++)
 			{	
-				if (it->getName() == name)
+				if (it->getName() == *it_name)
 				{
 					break ;
 				}
@@ -88,7 +87,7 @@ void Server::Join(Client client, std::vector<std::string> input)
 				}
 				if (it->get_pass_flag())
 				{
-					if (*it_key != "NO_PASS")
+					if (it_key->size() != 0)
 					{
 						if (it->getPass() != *it_key)
 						{
@@ -96,7 +95,7 @@ void Server::Join(Client client, std::vector<std::string> input)
 							continue ;
 						}
 					}
-					else if (*it_key == "NO_PASS")
+					else if (it_key->size() == 0)
 					{
 						sendReply(client.getClientSocketfd(), ERR_INCORPASS(client.getName()));
 						continue ;
@@ -106,14 +105,14 @@ void Server::Join(Client client, std::vector<std::string> input)
 				{
 					if (it->getUserLimit() <= (int)it->members.size())
 					{
-						sendReply(client.getClientSocketfd(), ERR_CHANNELISFULL(client.getName(), name));
+						sendReply(client.getClientSocketfd(), ERR_CHANNELISFULL(client.getName(), *it_name));
 						continue ;
 					}
 				}
 				
 				if (it->getInviteOnly())
 				{
-					sendReply(client.getClientSocketfd(), ERR_INVITEONLYCHAN(client.getName(), name));
+					sendReply(client.getClientSocketfd(), ERR_INVITEONLYCHAN(client.getName(), *it_name));
 					continue ;
 				}
 				it->members.push_back(client);
@@ -123,7 +122,7 @@ void Server::Join(Client client, std::vector<std::string> input)
 					sendReply(it_member->getClientSocketfd(), RPL_JOIN(client.getName(), it->getName()));
 				}
 				if (it->getTopic() == "")
-					sendReply(client.getClientSocketfd(), RPL_NOTOPIC(client.getName(), name));
+					sendReply(client.getClientSocketfd(), RPL_NOTOPIC(client.getName(), *it_name));
 				else 
 				{
 					sendReply(client.getClientSocketfd(), RPL_TOPIC(client.getName(), it->getName(), it->getTopic()));
@@ -153,13 +152,13 @@ void Server::Join(Client client, std::vector<std::string> input)
 			else
 			{
 				Channel last_chan;
-				last_chan.setName(name);
-				if (*it_key != "NO_PASS")
+				last_chan.setName(*it_name);
+				if (it_key->size() != 0)
 				{
 					last_chan.setPass(*it_key);
 					last_chan.set_pass_flag(true);
 				}
-				else if (*it_key == "NO_PASS")
+				else if (it_key->size() == 0)
 				{
 					last_chan.setPass("");
 					last_chan.set_pass_flag(false);
@@ -170,11 +169,10 @@ void Server::Join(Client client, std::vector<std::string> input)
 				last_chan.members.push_back(client);
 				last_chan.admines.push_back(client);
 				Channels.push_back(last_chan);
-				std::cout <<name<<std::endl;
-				sendReply(client.getClientSocketfd(), ":" + client.getHostname() + " JOIN :" + name + "\r\n");
-				sendReply(client.getClientSocketfd(), RPL_NOTOPIC(client.getName(), name));
-				sendReply(client.getClientSocketfd(), RPL_NAMREPLY(client.getName(), name, "@" + client.getName()));
-				sendReply(client.getClientSocketfd(), RPL_ENDOFNAMES(client.getName(), name));
+				sendReply(client.getClientSocketfd(), ":" + client.getHostname() + " JOIN :" + *it_name + "\r\n");
+				sendReply(client.getClientSocketfd(), RPL_NOTOPIC(client.getName(), *it_name));
+				sendReply(client.getClientSocketfd(), RPL_NAMREPLY(client.getName(), *it_name, "@" + client.getName()));
+				sendReply(client.getClientSocketfd(), RPL_ENDOFNAMES(client.getName(), *it_name));
 			}
 		}
 	}
