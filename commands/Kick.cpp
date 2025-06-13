@@ -28,6 +28,8 @@ void Server::Kick(Client client, std::vector<std::string> input, std::string buf
         couse = "";
     if (channel->isOperator(client)) {
         std::string reply;
+        if (client.getName() == toKickclient->getName() && channel->admines.size() == 1)
+            return ;
         if (couse.empty())
             reply = ":" + client.getHostname() + " KICK " + channel->getName() + " " + toKickclient->getName() + "\r\n";
         else 
@@ -39,7 +41,6 @@ void Server::Kick(Client client, std::vector<std::string> input, std::string buf
         }
         sendReply(toKickclient->getClientSocketfd(), reply);
         if (channel->isOperator(*toKickclient)){
-            std::cout << "here \n";
             channel->RemoveMember(*toKickclient);
             channel->RemoveOperator(*toKickclient);
         }

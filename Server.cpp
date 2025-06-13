@@ -55,13 +55,13 @@ void    Server::ServerStarts(){
         std::cout << "Exception Cought in ServerPrepa :" << e.msg();
         throw CustomException("ServerStarts() -> ServerPrepa()");
     }
-    Channel b;
-    std::cout << "Creat Channel #j\n";
-    b.setName("#j");
-    b.setTopicProtected(true);
-    Channels.push_back(b);
-    std::cout << "Pushed channel: " << Channels.back().getName()
-          << " | TopicProtected: " << (Channels.back().getTopicProtected() ? "true" : "false") << "\n";
+    // Channel b;
+    // std::cout << "Creat Channel #j\n";
+    // b.setName("#j");
+    // b.setTopicProtected(true);
+    // Channels.push_back(b);
+    // std::cout << "Pushed channel: " << Channels.back().getName()
+    //       << " | TopicProtected: " << (Channels.back().getTopicProtected() ? "true" : "false") << "\n";
 
     while (!Signal){
         if ((poll(PollFDs.data(), PollFDs.size(), -1) == -1) && !Signal){
@@ -129,8 +129,8 @@ void Server::handleNewClient(){
     newClient.setName(ss.str());
 
 
-    Channels[0].members.push_back(newClient);
-    Channels[0].admines.push_back(newClient);
+    // Channels[0].members.push_back(newClient);
+    // Channels[0].admines.push_back(newClient);
 
     std::cout << "New client connected: " << newClient.getClientSocketfd() << std::endl;
 }

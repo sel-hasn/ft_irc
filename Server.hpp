@@ -79,11 +79,15 @@ class Server{
         void Invite(Client client, std::vector<std::string> input);
         void Topic(Client client, std::vector<std::string> input, std::string buffer);
         void Mode(Client client, std::vector<std::string> input);
+
+        void Join(Client client, std::vector<std::string> input);
+        void Privmsg(Client client, std::vector<std::string> input);
 };
 
 int ParsePort(const std::string& av1);
 void PasswordParse(std::string av2);
 std::vector<std::string> split(const std::string& str);
 void eraser_samenewlines(std::string& receivedData);
+std::string toString(time_t val);
 
 #endif

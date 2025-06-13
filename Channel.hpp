@@ -2,6 +2,7 @@
 
 #include "Server.hpp"
 #include "Client.hpp"
+#include <vector>
 
 class Client;
 
@@ -38,6 +39,14 @@ class Channel
             this->Name = other.Name;
             this->Pass = other.Pass;
             this->pass_flag = other.pass_flag;
+            for (size_t i = 0; i < other.admines.size(); i++)
+            {
+                this->admines.push_back(other.admines[i]);
+            }
+            for (size_t i = 0; i < other.members.size(); i++)
+            {
+                this->members.push_back(other.members[i]);
+            }
             this->TopicProtected = other.TopicProtected;
             return (*this);
         }

@@ -127,6 +127,10 @@ void  Server::treating_commands(Client *client){
         NICK_cmd(client, buffer);
     else if (input[0] == "USER")
         USER_cmd(client, buffer);
+    else if (input[0] == "JOIN")
+        Join(*client, input);
+    else if (input[0] == "PRIVMSG")
+        Privmsg(*client, input);
     else if (input[0] == "KICK")
         Kick(*client, input, buffer);
     else if (input[0] == "INVITE")
