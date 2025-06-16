@@ -5,6 +5,19 @@
 
 class CustomException;
 
+struct player
+{
+    std::string Nick;
+    size_t      quizIndix;
+};
+
+struct Quiz {
+    std::string question;
+    std::string choices[3];
+    char answer;
+};
+
+
 class bot {
 private:
     int  serverport;
@@ -14,10 +27,17 @@ private:
 public:
     bot(char *hostname, int port, char *password);
     ~bot();
+    std::vector<player> players;
+    std::vector<Quiz> quizDatabase;
 
     void startbot();
     void connectToServer();
     void authenticate();
-    void sendReply(const std::string &msg);
-
+    void sendMessage(const std::string &msg);
+    player *getplayer(std::string sender);
+    void initQuizDatabase();
+    void sendrespon(std::string &message, std::string &sender, std::string buffer);
+    void playGame(std::string &sender, std::string &message);
+    void checkanswer(player &p, const std::string &message);
+    void sendQuizToPlayer(player &p);
 };

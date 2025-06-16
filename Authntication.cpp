@@ -39,7 +39,7 @@ void  Server::NICK_cmd(Client *clint, std::string &buffer){
     clint->setName(splited[1]);
     clint->sethasName(true);
     if (clint->gethasUserName()){
-        sendReply(clint->getClientSocketfd(), RPL_WELCOME(splited[1], "Welcome to irc server !"));
+        sendReply(clint->getClientSocketfd(), RPL_WELCOME(splited[1], "Welcome to irc server"));
         clint->setRegister(true);
     }
 }
@@ -88,7 +88,7 @@ void  Server::USER_cmd(Client *clint, std::string &buffer){
     clint->sethasUname(true);
     clint->setUserName(splited[1]);
     if (clint->gethasName()){
-        sendReply(clint->getClientSocketfd(), RPL_WELCOME(clint->getName(), "Welcome to irc server !"));
+        sendReply(clint->getClientSocketfd(), RPL_WELCOME(clint->getName(), "Welcome to irc server"));
         clint->setRegister(true);
     }
 }
