@@ -33,7 +33,9 @@ class Client{
         std::string getBUFFER() const { return BUFFER; }
 
         std::string getHostname() {
-            return Name + "!" + UserName + "@localhost";
+            char str[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, &(ClientAddress.sin_addr), str, INET_ADDRSTRLEN);
+            return Name + "!" + UserName + "@" + str;
         }
 
         bool getisRegistered() const{ return isRegistered; } 

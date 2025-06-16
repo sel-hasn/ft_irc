@@ -84,16 +84,16 @@ void    Server::ServerStarts(){
                 }
             }
         }
-        std::cout << "CLients size is : " << Clients.size() << " || CLients vecteur : ";
-        for(size_t i = 0; i < Clients.size(); i++){
-            std::cout << Clients[i].getClientSocketfd() << " ";
-        }
-        std::cout << std::endl;
-        std::cout << "PollFDS size is : " << PollFDs.size() << " || PollFDS vecteur : ";
-        for(size_t i = 0; i < PollFDs.size(); i++){
-            std::cout << PollFDs[i].fd << " ";
-        }
-        std::cout << std::endl;
+        // std::cout << "CLients size is : " << Clients.size() << " || CLients vecteur : ";
+        // for(size_t i = 0; i < Clients.size(); i++){
+        //     std::cout << Clients[i].getClientSocketfd() << " ";
+        // }
+        // std::cout << std::endl;
+        // std::cout << "PollFDS size is : " << PollFDs.size() << " || PollFDS vecteur : ";
+        // for(size_t i = 0; i < PollFDs.size(); i++){
+        //     std::cout << PollFDs[i].fd << " ";
+        // }
+        // std::cout << std::endl;
     }
     server_ends();
 }
@@ -124,9 +124,9 @@ void Server::handleNewClient(){
     newClient.setRegister(false);
     Clients.push_back(newClient);
 
-    std::stringstream ss;
-    ss << "defaultNick" << Clients.size() + 1;  // e.g., defaultNick1, defaultNick2, ...
-    newClient.setName(ss.str());
+    // std::stringstream ss;
+    // ss << "defaultNick" << Clients.size() + 1;  // e.g., defaultNick1, defaultNick2, ...
+    // newClient.setName(ss.str());
 
 
     // Channels[0].members.push_back(newClient);

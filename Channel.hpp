@@ -25,7 +25,7 @@ class Channel
         std::vector<Client> admines;
 
         Channel() : Name(""), Pass(""), topic(""), pass_flag(false), InviteOnly(false), TopicProtected(false)
-        , UserLimitFlag(false), UserLimit(0){}
+        , UserLimitFlag(false), UserLimit(0), howsetTopic(""){}
 
         Channel(const Channel &other)
         {
@@ -37,8 +37,20 @@ class Channel
             if (this == &other)
                 return (*this);
             this->Name = other.Name;
+            this->topic = other.topic;
+            
             this->Pass = other.Pass;
             this->pass_flag = other.pass_flag;
+
+            this->UserLimitFlag = other.UserLimitFlag;
+            this->UserLimit = 0;
+
+            this->TopicProtected = other.TopicProtected;
+            this->howsetTopic = other.howsetTopic;
+
+            this->InviteOnly = other.InviteOnly;
+            
+            this->TopicsetAtime = 0;
             for (size_t i = 0; i < other.admines.size(); i++)
             {
                 this->admines.push_back(other.admines[i]);
@@ -47,7 +59,6 @@ class Channel
             {
                 this->members.push_back(other.members[i]);
             }
-            this->TopicProtected = other.TopicProtected;
             return (*this);
         }
         ~Channel(){}

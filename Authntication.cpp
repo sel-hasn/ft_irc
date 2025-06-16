@@ -7,7 +7,7 @@ void  Server::NICK_cmd(Client *clint, std::string &buffer){
         std::cerr << "Client sent invalid nickname args\n";
         return ;
     }
-    if (splited[1].length() < 4 || splited[1].length() > 9) {
+    if (splited[1].length() < 3) {
         sendReply(clint->getClientSocketfd(), ERR_NONICKNAMEGIVEN(splited[1]));
         std::cerr << "Client sent invalid nickname length\n";
         return ;
@@ -19,7 +19,7 @@ void  Server::NICK_cmd(Client *clint, std::string &buffer){
     }
     for (size_t i = 0; i < splited[1].length(); i++ ) {
         if (!std::isalpha(splited[1][i]) && splited[1][i] != '-' && splited[1][i] != '_'){
-            sendReply(clint->getClientSocketfd(),  ERR_NOSUCHNICK(splited[1]));
+            sendReply(clint->getClientSocketfd(),  ERR_ERRONEUSNICKNAME(splited[1]));
             std::cerr << "Client sent invalid nickname (chars invalid)\n";
             return ;
         }
@@ -30,6 +30,11 @@ void  Server::NICK_cmd(Client *clint, std::string &buffer){
             std::cerr << "Duplicate nickname\n";
             return ;
         }
+    }
+    if (clint->gethasName() && clint->getisRegistered()){
+        std::cout << ":" << clint->getName() << " changed his nickname to " << splited[1] << std::endl;
+        clint->setName(splited[1]);
+        return ;
     }
     clint->setName(splited[1]);
     clint->sethasName(true);
@@ -78,9 +83,10 @@ void  Server::USER_cmd(Client *clint, std::string &buffer){
         std::cerr << "Client sent invalid USER without real name ':' \n";
         return ;
     }
-    clint->setrealName(splited[3]);
+    clint->setrealName(splited[4]);
     clint->sethasrealName(true);
     clint->sethasUname(true);
+    clint->setUserName(splited[1]);
     if (clint->gethasName()){
         sendReply(clint->getClientSocketfd(), RPL_WELCOME(clint->getName(), "Welcome to irc server !"));
         clint->setRegister(true);

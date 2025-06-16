@@ -112,11 +112,8 @@ void  Server::treating_commands(Client *client){
     if (buffer.length() == 0)
         return ;
     std::vector<std::string> input = split(buffer);
-    if (!client->gethasPass() && !input.size())
+    if ((client->gethasPass() || !client->gethasPass()) && !input.size())
         return ;
-    if (client->gethasPass() && !input.size()){
-        return ;
-    }
     if (!client->gethasPass() && input[0] != "PASS"){
         sendReply(client->getClientSocketfd(), ERR_NOTREGISTERED);
         return ;
@@ -127,6 +124,10 @@ void  Server::treating_commands(Client *client){
         NICK_cmd(client, buffer);
     else if (input[0] == "USER")
         USER_cmd(client, buffer);
+    else if (!client->getisRegistered()){
+        sendReply(client->getClientSocketfd(), ERR_NOTREGISTERED);
+        return ;
+    }
     else if (input[0] == "JOIN")
         Join(*client, input);
     else if (input[0] == "PRIVMSG")

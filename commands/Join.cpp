@@ -163,9 +163,9 @@ void Server::Join(Client client, std::vector<std::string> input)
 					last_chan.setPass("");
 					last_chan.set_pass_flag(false);
 				}
-				last_chan.set_UserLimitFlag(0);
-				last_chan.setInviteOnly(0);
-				last_chan.setTopicProtected(0);
+				last_chan.set_UserLimitFlag(false);
+				last_chan.setInviteOnly(false);
+				last_chan.setTopicProtected(false);
 				last_chan.members.push_back(client);
 				last_chan.admines.push_back(client);
 				Channels.push_back(last_chan);
