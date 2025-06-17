@@ -156,7 +156,7 @@ void Server::Join(Client client, std::vector<std::string> input)
 				if (it_key->size() != 0)
 				{
 					last_chan.setPass(*it_key);
-					last_chan.set_pass_flag(true);
+					last_chan.set_pass_flag(false);
 				}
 				else if (it_key->size() == 0)
 				{

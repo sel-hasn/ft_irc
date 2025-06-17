@@ -38,12 +38,41 @@ void bot::connectToServer()
 void bot::authenticate()
 {
     sendMessage("PASS " + std::string(this->password));
-    usleep(100);
+    usleep(10000);
 
-    sendMessage("NICK bot");
-    usleep(100);
+    std::string nickname = "bot";
+    sendMessage("NICK " + nickname);
+    usleep(10000);
 
     sendMessage("USER quizbot 0 * :Quiz Bot");
+
+    // char buffer[512];
+    // while (true)
+    // {
+    //     int bytesReceived = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
+    //     if (bytesReceived <= 0)
+    //         throw std::runtime_error("Failed to receive server response during authentication");
+
+    //     buffer[bytesReceived] = '\0';
+    //     std::string response(buffer);
+
+    //     std::cout << "[Auth Response] " << response;
+
+    //     // Check if nickname is already in use
+    //     if (response.find("433") != std::string::npos)
+    //     {
+    //         nickname += "_"; // Try a new nickname
+    //         std::cout << "Nickname in use. Trying: " << nickname << std::endl;
+    //         sendMessage("NICK " + nickname);
+    //     }
+
+    //     // If we receive 001 (welcome), we are registered
+    //     if (response.find("001") != std::string::npos)
+    //     {
+    //         std::cout << "Authenticated successfully as " << nickname << std::endl;
+    //         break;
+    //     }
+    // }
 }
 
 std::string trim(const std::string& str) {
@@ -55,7 +84,7 @@ std::string trim(const std::string& str) {
     return str.substr(first, last - first + 1);
 }
 
-std::string getMessage(const std::string& buffer) {
+std::string getMessage(std::string buffer) {
     size_t colon = buffer.find(" :");
     if (colon != std::string::npos) {
         std::string rawMsg = buffer.substr(colon + 2);
@@ -64,19 +93,19 @@ std::string getMessage(const std::string& buffer) {
     return "";
 }
 
-std::string getSender(const std::string& buffer) {
-    if (buffer.empty() || buffer[0] != ':')
-        return "";
-
-    size_t exclam = buffer.find('!');
-    if (exclam != std::string::npos) {
-        return buffer.substr(1, exclam - 1);
+std::string getSender(std::string buffer) {
+    if (buffer[0] == ':'){
+        size_t Pos = buffer.find(" ");
+        if (Pos != std::string::npos) {
+            std::string rawMsg = buffer.substr(0, Pos);
+            return trim(rawMsg);
+        }
     }
-
-    size_t space = buffer.find(' ');
-    if (space != std::string::npos)
-        return buffer.substr(1, space - 1);
-
+    size_t spacePos = buffer.find(" :");
+    if (spacePos != std::string::npos) {
+        std::string rawMsg = buffer.substr(0, spacePos);
+        return trim(rawMsg);
+    }
     return "";
 }
 
@@ -98,12 +127,12 @@ void bot::sendQuizToPlayer(player &p) {
 
     std::string questionMsg = "PRIVMSG " + p.Nick + " : " + q.question;
     sendMessage(questionMsg);
-    usleep(10000);
+    usleep(100000);
 
     for (size_t i = 0; i < 3; ++i) {
         std::string choiceMsg = "PRIVMSG " + p.Nick + " : " + q.choices[i];
         sendMessage(choiceMsg);
-        usleep(10000);
+        usleep(100000);
     }
 }
 
@@ -148,13 +177,15 @@ void bot::playGame(std::string &sender, std::string &message)
     if (message == "a" || message == "b" || message == "c")
         checkanswer(*p, message);
     else {
+        sendMessage("PRIVMSG " + p->Nick + " : Wrong answer. 😢 You have to shose a,b or c!");
+        usleep(10000);
         sendQuizToPlayer(*p);
     }
 }
 
 void bot::sendrespon(std::string &message, std::string &sender, std::string buffer)
 {
-    if (sender == "IRCServer")
+    if (sender == ":IRCServer")
         return ;
     if (message == "game" || message == "GAME" || getplayer(sender) != NULL)
         playGame(sender, message);
@@ -212,8 +243,10 @@ void bot::startbot()
             throw std::runtime_error("error in reseving data\n");
 
         buffer[bytesrecieved] = '\0';
-        message = getMessage(std::string(buffer));
-        sender = getSender(std::string(buffer));
+        std::cout<<buffer<<std::endl;
+        sender = getSender(buffer);
+        message = getMessage(buffer);
+        std::cout<<sender<<" : "<<message<<std::endl;
 
         sendrespon(message, sender, buffer);
     }

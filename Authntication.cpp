@@ -1,6 +1,10 @@
 #include "Server.hpp"
 
 void  Server::NICK_cmd(Client *clint, std::string &buffer){
+    if (clint->getconnectTobot() == true){
+        sendReply(clint->getClientSocketfd(), ":IRCServer :Nickname change is not allowed while you are in an active quiz session with the bot.");
+        return ;
+    }
     std::vector<std::string> splited = split(buffer);
     if (splited.size() != 2){
         sendReply(clint->getClientSocketfd(), ERR_NEEDMOREPARAMS(splited[0]));
