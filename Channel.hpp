@@ -22,6 +22,7 @@ class Channel
     public:
 
         std::vector<Client> members;
+        std::vector<Client> invited;
         std::vector<Client> admines;
 
         Channel() : Name(""), Pass(""), topic(""), pass_flag(false), InviteOnly(false), TopicProtected(false)
@@ -175,6 +176,33 @@ class Channel
             for (size_t i = 0; i < admines.size(); ++i){
                 if (admines[i].getName() == user.getName()){
                     admines.erase(admines.begin() + i);
+                    break ;
+                }
+            }
+        }
+        bool isInvited(Client user)
+        {
+            for (size_t i = 0; i < invited.size(); ++i){
+                if (invited[i].getName() == user.getName()){
+                    return true;
+                }
+            }
+            return false;
+        }
+        void addToInvited(Client user)
+        {
+            for (size_t i = 0; i < invited.size(); ++i){
+                if (invited[i].getName() == user.getName()){
+                    return ;
+                }
+            }
+            invited.push_back(user);
+        }
+        void RemoveFromInvited(Client user)
+        {
+            for (size_t i = 0; i < invited.size(); ++i){
+                if (invited[i].getName() == user.getName()){
+                    invited.erase(invited.begin() + i);
                     break ;
                 }
             }

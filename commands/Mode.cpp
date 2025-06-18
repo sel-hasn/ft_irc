@@ -21,18 +21,28 @@ void Server::Mode(Client client, std::vector<std::string> input)
     {
         std::string mode = "+";
         std::string argc = "";
+        
         if (channel->getInviteOnly())
             mode += "i";
         if (channel->getTopicProtected())
             mode += "t";
         if (channel->get_pass_flag())
         {
-            argc = channel->getPass();
             mode += "k";
+            argc += channel->getPass() + " ";
         }
+        if (channel->get_UserLimitFlag())
+        {
+            mode += "l";
+            std::stringstream ss;
+            ss << channel->getUserLimit();
+            argc += ss.str();
+        }
+
         sendReply(client.getClientSocketfd(), RPL_CHANNELMODEIS(client.getName(), channel->getName(), mode, argc));
         return;
     }
+
     if (!channel->isOperator(client))
     {
         sendReply(client.getClientSocketfd(), ERR_CHANOPRIVSNEEDED(input[1]));
