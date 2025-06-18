@@ -26,8 +26,7 @@ void Server::Invite(Client client, std::vector<std::string> input)
         sendReply(client.getClientSocketfd(), ERR_USERONCHANNEL(input[1], input[2]));
         return ;
     }
-    std::cerr << "checking if " << client.getName() << " can invite\n";
-    if (channel->getInviteOnly() && channel->isOperator(client))
+    if (channel->getInviteOnly() && !channel->isOperator(client))
     {
         sendReply(client.getClientSocketfd(), ERR_CHANOPRIVSNEEDED(input[2]));
         return ;

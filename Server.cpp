@@ -81,6 +81,7 @@ void    Server::ServerStarts(){
                     close(tmp);
                     erasing_fd_from_client_vecteurs(tmp);
                     erasing_fd_from_poll_vecteurs(tmp);
+                    
                 }
             }
         }

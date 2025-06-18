@@ -104,7 +104,7 @@ void  Server::USER_cmd(Client *clint, std::string &buffer){
         sendReply(clint->getClientSocketfd(), ERR_ALREADYREGISTRED(clint->getName()));
         return;
     }
-    if (splited.size() != 5){
+    if (splited.size() < 4){
         sendReply(clint->getClientSocketfd(), ERR_NEEDMOREPARAMS(splited[0]));
         std::cerr << "Client sent invalid USER args\n";
         return ;
