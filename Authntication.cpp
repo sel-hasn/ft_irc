@@ -13,8 +13,8 @@ static int check_names(std::string splited, int flag){
     }
     else {
         std::cout << "splited >" << splited << std::endl;
-        if (splited[0] != ':')
-            return -1;
+        // if (splited[0] != ':')
+        //     return -1;
         for (size_t i = 1; i < splited.length(); i++ ) {
             if (!std::isalpha(splited[i]) && splited[i] != '-' 
                 && splited[i] != '_' && splited[i] != 32){
