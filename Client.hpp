@@ -18,7 +18,6 @@ class Client{
         bool        hasUserName;
         bool        hasName;
         bool        hasrealName;
-        bool        connectTobot;
         sockaddr_in ClientAddress;
     
     public:
@@ -51,8 +50,6 @@ class Client{
 
         bool gethasrealname() const{ return hasUserName;  }
 
-        bool getconnectTobot() const{ return connectTobot; }
-
         sockaddr_in getClientAddress() const{ return ClientAddress; };
 
         /* setters */
@@ -80,8 +77,6 @@ class Client{
 
         void setClientAddress(sockaddr_in newaddr){ ClientAddress = newaddr; }
 
-        void setconnectTobot(bool stat) { connectTobot = stat; }
-
         Client(const Client& other){
             Name = other.Name;
             Pass = other.Pass;
@@ -95,7 +90,6 @@ class Client{
             hasName = other.hasName;
             hasrealName = other.hasrealName;
             ClientAddress = other.ClientAddress;
-            connectTobot = other.connectTobot;
         };    
         Client& operator=(const Client& other){
             if (this != &other){
@@ -111,15 +105,14 @@ class Client{
                 this->setUserName(other.getUserName());
                 this->setRegister(other.getisRegistered());
                 this->setClientAddress(other.getClientAddress());
-                this->setconnectTobot(other.connectTobot);
             }
             return *this;
         };
         Client(){
-            Name = "defaultNick";
+            Name = "-";
             Pass = "";
-            realName = "de-real";
-            UserName = "user-real";
+            realName = "-";
+            UserName = "-";
             BUFFER = "";
             ClientSocketfd = -1;
             isRegistered = false;
@@ -127,7 +120,6 @@ class Client{
             hasUserName = false;
             hasName = false;
             hasrealName = false;
-            connectTobot = false;
         };
         ~Client(){
             // std::cout << "client dest() called !\n";

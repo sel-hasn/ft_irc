@@ -1,10 +1,39 @@
 #include "Server.hpp"
 
-void  Server::NICK_cmd(Client *clint, std::string &buffer){
-    if (clint->getconnectTobot() == true){
-        sendReply(clint->getClientSocketfd(), ":IRCServer :Nickname change is not allowed while you are in an active quiz session with the bot.");
-        return ;
+static int check_names(std::string splited, int flag){
+    if (flag){
+        if (splited.length() < 1)
+            return -1;
+        for (size_t i = 0; i < splited.length(); i++ ) {
+            if (!std::isalnum(splited[i]) && splited[i] != '-'
+                && splited[i] != '_' && splited[i] != '.'){
+                return -1;
+            }
+        }
     }
+    else {
+        std::cout << "splited >" << splited << std::endl;
+        if (splited[0] != ':')
+            return -1;
+        for (size_t i = 1; i < splited.length(); i++ ) {
+            if (!std::isalpha(splited[i]) && splited[i] != '-' 
+                && splited[i] != '_' && splited[i] != 32){
+                return -1;
+            }
+        }
+    }
+    return 1;
+}
+
+static int check_secthird(std::string splited){
+    if(splited.length() != 1)
+        return 1;
+    if(splited[0] != '0' && splited[0] != '*')
+        return 1;
+    return 0;
+}
+
+void  Server::NICK_cmd(Client *clint, std::string &buffer){
     std::vector<std::string> splited = split(buffer);
     if (splited.size() != 2){
         sendReply(clint->getClientSocketfd(), ERR_NEEDMOREPARAMS(splited[0]));
@@ -21,12 +50,10 @@ void  Server::NICK_cmd(Client *clint, std::string &buffer){
         std::cerr << "Client sent invalid nickname leadchar\n";
         return ;
     }
-    for (size_t i = 0; i < splited[1].length(); i++ ) {
-        if (!std::isalpha(splited[1][i]) && splited[1][i] != '-' && splited[1][i] != '_'){
-            sendReply(clint->getClientSocketfd(),  ERR_ERRONEUSNICKNAME(splited[1]));
-            std::cerr << "Client sent invalid nickname (chars invalid)\n";
-            return ;
-        }
+    if (check_names(splited[1], 1) == -1){
+        sendReply(clint->getClientSocketfd(),  ERR_ERRONEUSNICKNAME(splited[1]));
+        std::cerr << "Client sent invalid nickname (chars invalid)\n";
+        return ;
     }
     for (size_t i = 0; i < Clients.size(); i++) {
         if (Clients[i].getName() == splited[1]) {
@@ -82,12 +109,34 @@ void  Server::USER_cmd(Client *clint, std::string &buffer){
         std::cerr << "Client sent invalid USER args\n";
         return ;
     }
-    if (buffer.find(':') == std::string::npos){
+    if (check_names(splited[1], 1) == -1){
+        sendReply(clint->getClientSocketfd(), ERR_NEEDMOREPARAMS(splited[0]));
+        std::cerr << "Client sent invalid USER Username ! \n";
+        return ;
+    }
+    if (check_names(splited[4], 0) == -1){
         sendReply(clint->getClientSocketfd(), ERR_NEEDMOREPARAMS(splited[0]));
         std::cerr << "Client sent invalid USER without real name ':' \n";
         return ;
     }
-    clint->setrealName(splited[4]);
+    if (check_secthird(splited[2]) || check_secthird(splited[3])){
+        sendReply(clint->getClientSocketfd(), ERR_NEEDMOREPARAMS(splited[0]));
+        std::cerr << "Client sent invalid second and third params \n";
+        return ;
+    }
+    std::string newrealname;
+    size_t i = 1;
+    for (; i < splited[4].length(); i++)
+    {
+        if (!std::isspace(splited[4][i]))
+            break ;
+    }
+    for (; i < splited[4].length(); i++)
+    {
+        newrealname += splited[4][i];
+    }
+    std::cout << "new new real name is >" << newrealname << std::endl;
+    clint->setrealName(newrealname);
     clint->sethasrealName(true);
     clint->sethasUname(true);
     clint->setUserName(splited[1]);
