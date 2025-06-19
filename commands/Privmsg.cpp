@@ -34,6 +34,9 @@ void Server::connectTobot(Client client, std::vector<std::string> input)
 		std::cout<<"\n\nconnect with the bot\n\n";
 		client.setconnectTobot(true);
 	}
+	// else {
+	// 	sendReply(client.getClientSocketfd(), ":bot!quizbot@127.0.0.1 PRIVMSG "+ client.getName() +" : No more questions. Thanks for playing!\r\n");
+	// }
 }
 
 void Server::Privmsg(Client client, std::vector<std::string> input)
@@ -108,7 +111,6 @@ void Server::Privmsg(Client client, std::vector<std::string> input)
         		{
 					std::cout<<"disconnect with the bot\n\n";
         		    client.setconnectTobot(false);
-        		    return;
         		}
 				sendReply(it->getClientSocketfd(), RPL_PRIVMSG(client.getHostname(), input[1], input[2].substr(1, input[2].size())));
 			}

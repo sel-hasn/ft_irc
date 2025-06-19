@@ -1,4 +1,5 @@
 #include "../Server.hpp"
+#include <algorithm>
 
 void Server::Join(Client client, std::vector<std::string> input)
 {
@@ -7,6 +8,57 @@ void Server::Join(Client client, std::vector<std::string> input)
 		sendReply(client.getClientSocketfd(), ERR_NEEDMOREPARAMS(input[0]));
 		return ;
 	}
+	if (input[1] == "0")
+    {
+        for (size_t i = 0; i < Channels.size(); )
+        {
+            bool erasedChannel = false;
+
+            for (size_t j = 0; j < Channels[i].members.size(); j++)
+            {
+                if (Channels[i].members[j].getName() == client.getName())
+                {
+                    std::string prefix = client.getHostname();
+                    std::string channelName = Channels[i].getName();
+
+                    std::string partMsg = ":" + prefix + " PART " + channelName + "\r\n";
+
+                    for (size_t k = 0; k < Channels[i].members.size(); k++)
+                    {
+                        sendReply(Channels[i].members[k].getClientSocketfd(), partMsg);
+                    }
+
+                    if (Channels[i].members.size() == 1)
+                    {
+                        Channels.erase(Channels.begin() + i);
+                        erasedChannel = true;
+                        break;
+                    }
+                    else
+                    {
+                        if (j + 1 < Channels[i].members.size())
+                        {
+                            Client newAdmin = Channels[i].members[j + 1];
+                            for (size_t idx = 0; idx < Channels[i].admines.size(); idx++)
+                            {
+                                if (Channels[i].admines[idx].getName() == client.getName())
+                                {
+                                    Channels[i].admines.erase(Channels[i].admines.begin() + idx);
+                                    Channels[i].admines.push_back(newAdmin);
+                                    break;
+                                }
+                            }
+                        }
+                        Channels[i].members.erase(Channels[i].members.begin() + j);
+                        break;
+                    }
+                }
+            }
+            if (!erasedChannel)
+                ++i;
+        }
+        return;
+    }
 	std::vector<std::string> str_names;
 	std::vector<std::string> str_keys;
 	for (size_t i = 0; i < input[1].size(); i++)
@@ -109,16 +161,12 @@ void Server::Join(Client client, std::vector<std::string> input)
 						continue ;
 					}
 				}
-				
-				if (it->getInviteOnly() && !it->isOperator(client) && !it->isInvited(client))
-				{
-					sendReply(client.getClientSocketfd(), ERR_INVITEONLYCHAN(client.getName(), *it_name));
-					continue ;
-				}
-				if (it->getInviteOnly() && it->isInvited(client))
-				{
-					it->RemoveFromInvited(client);
-				}
+                
+                if (it->getInviteOnly() && !it->isOperator(client) && !it->isInvited(client))
+                {
+                    sendReply(client.getClientSocketfd(), ERR_INVITEONLYCHAN(client.getName(), *it_name));
+                    continue ;
+                }
 				it->members.push_back(client);
 				std::vector<Client>::iterator it_member = it->members.begin();
 				for (; it_member != it->members.end(); it_member++)
@@ -141,7 +189,7 @@ void Server::Join(Client client, std::vector<std::string> input)
 						flag = 0;
 						if (it->admines[i].getName() == it->members[j].getName())
 						{
-							users.append("@" + it->members[j].getName());
+							users.append("@" + it->admines[i].getName());
 							flag = 1;
 							break ;
 						}

@@ -21,9 +21,9 @@ struct Quiz {
 class bot {
 private:
     int  serverport;
-    int  sockfd;
     char *serverHostname;
     char *password;
+    int  sockfd;
 public:
     bot(char *hostname, int port, char *password);
     ~bot();

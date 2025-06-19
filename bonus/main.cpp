@@ -18,8 +18,8 @@ int main(int arc, char **arv)
         return 1;
     }
     try {
-        bot bot(arv[1], port, arv[3]);
-        bot.startbot();
+        bot qouizbot(arv[1], port, arv[3]);
+        qouizbot.startbot();
     }
     catch (std::exception &exp){
         std::cerr<<exp.what()<<std::endl;

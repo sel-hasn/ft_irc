@@ -56,9 +56,9 @@ void Server::Mode(Client client, std::vector<std::string> input)
         return;
     }
 
-    bool add = true;  // Tracks whether we're adding or removing modes
-    size_t paramIndex = 3; // Start looking for parameters from input[3]
-    std::string modeChanges; // For reply, store all applied modes (+i-t+k etc.)
+    bool add = true;
+    size_t paramIndex = 3;
+    std::string modeChanges;
 
     for (size_t i = 0; i < modes.size(); ++i)
     {
@@ -76,7 +76,6 @@ void Server::Mode(Client client, std::vector<std::string> input)
             continue;
         }
 
-        // Process mode character c:
         bool needsParam = (c == 'k' || c == 'o' || c == 'l');
         std::string param;
 
@@ -170,7 +169,6 @@ void Server::Mode(Client client, std::vector<std::string> input)
                 }
                 break;
             default:
-                // Unknown mode char
                 sendReply(client.getClientSocketfd(), ERR_UNKNOWNMODE(client.getName(), input[1], std::string(1, c)));
                 return;
         }

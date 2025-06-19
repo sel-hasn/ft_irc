@@ -45,34 +45,6 @@ void bot::authenticate()
     usleep(10000);
 
     sendMessage("USER quizbot 0 * :Quiz Bot");
-
-    // char buffer[512];
-    // while (true)
-    // {
-    //     int bytesReceived = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
-    //     if (bytesReceived <= 0)
-    //         throw std::runtime_error("Failed to receive server response during authentication");
-
-    //     buffer[bytesReceived] = '\0';
-    //     std::string response(buffer);
-
-    //     std::cout << "[Auth Response] " << response;
-
-    //     // Check if nickname is already in use
-    //     if (response.find("433") != std::string::npos)
-    //     {
-    //         nickname += "_"; // Try a new nickname
-    //         std::cout << "Nickname in use. Trying: " << nickname << std::endl;
-    //         sendMessage("NICK " + nickname);
-    //     }
-
-    //     // If we receive 001 (welcome), we are registered
-    //     if (response.find("001") != std::string::npos)
-    //     {
-    //         std::cout << "Authenticated successfully as " << nickname << std::endl;
-    //         break;
-    //     }
-    // }
 }
 
 std::string trim(const std::string& str) {
@@ -120,8 +92,8 @@ player *bot::getplayer(std::string sender)
 }
 
 void bot::sendQuizToPlayer(player &p) {
-    if (p.quizIndix >= quizDatabase.size())
-        p.quizIndix = 0;
+    // if (p.quizIndix >= quizDatabase.size())
+    //     p.quizIndix = 0;
 
     Quiz &q = quizDatabase[p.quizIndix];
 
@@ -138,6 +110,8 @@ void bot::sendQuizToPlayer(player &p) {
 
 void bot::checkanswer(player &p, const std::string &message) {
     if (p.quizIndix >= quizDatabase.size()) {
+        sendMessage("PRIVMSG " + p.Nick + " : You have completed the quiz!");
+        usleep(100000);
         sendMessage("PRIVMSG " + p.Nick + " : No more questions. Thanks for playing!");
         return;
     }
@@ -147,15 +121,16 @@ void bot::checkanswer(player &p, const std::string &message) {
         sendMessage("PRIVMSG " + p.Nick + " : Correct! 🎉");
         p.quizIndix++;
     } else {
-        sendMessage("PRIVMSG " + p.Nick + " : Wrong answer. 😢 Try the next one!");
+        sendMessage("PRIVMSG " + p.Nick + " : Wrong answer. 😢");
         p.quizIndix++;
     }
     usleep(10000);
 
-    if (p.quizIndix < quizDatabase.size())
+    if (p.quizIndix < quizDatabase.size()){
         sendQuizToPlayer(p);
-    else
-        sendMessage("PRIVMSG " + p.Nick + " : You have completed the quiz!");
+        return ;
+    }
+    sendMessage("PRIVMSG " + p.Nick + " : You have completed the quiz!");
 }
 
 void bot::playGame(std::string &sender, std::string &message)
@@ -176,8 +151,13 @@ void bot::playGame(std::string &sender, std::string &message)
 
     if (message == "a" || message == "b" || message == "c")
         checkanswer(*p, message);
+    else if (p->quizIndix > 2){
+        sendMessage("PRIVMSG " + p->Nick + " : You have completed the quiz!");
+        usleep(100000);
+        sendMessage("PRIVMSG " + p->Nick + " : No more questions. Thanks for playing!");
+    }
     else {
-        sendMessage("PRIVMSG " + p->Nick + " : Wrong answer. 😢 You have to shose a,b or c!");
+        sendMessage("PRIVMSG " + p->Nick + " : Wrong answer. You have to shose a,b or c!");
         usleep(10000);
         sendQuizToPlayer(*p);
     }
@@ -237,10 +217,14 @@ void bot::startbot()
     while (true)
     {
         int bytesrecieved = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
-        if (bytesrecieved == 0)
+        if (bytesrecieved == 0){
+            close(sockfd);
             throw std::runtime_error("disconcet from the server\n");
-        else if (bytesrecieved < 0)
+        }
+        else if (bytesrecieved < 0){
+            close(sockfd);
             throw std::runtime_error("error in reseving data\n");
+        }
 
         buffer[bytesrecieved] = '\0';
         std::cout<<buffer<<std::endl;
