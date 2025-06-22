@@ -1,6 +1,11 @@
 #include "../Server.hpp"
 void Server::Mode(Client client, std::vector<std::string> input)
 {
+    std::cout << "MODE command input: ";
+    for (size_t i = 0; i < input.size(); ++i)
+        std::cout << "[" << i << "] " << input[i] << " ";
+    std::cout << std::endl;
+
     if (input.size() < 2)
     {
         sendReply(client.getClientSocketfd(), ERR_NEEDMOREPARAMS(input[0]));
@@ -114,6 +119,7 @@ void Server::Mode(Client client, std::vector<std::string> input)
                 break;
             case 'o':
             {
+                std::cout<<"hello\n\n";
                 Client *target = getClient(param);
                 if (!target || !channel->inChannel(*target))
                 {
@@ -174,5 +180,23 @@ void Server::Mode(Client client, std::vector<std::string> input)
         }
     }
 
-    sendReply(client.getClientSocketfd(), RPL_CHANGEMODE(client.getHostname(), channel->getName(), modeChanges));
+    std::string fullModeMsg = ":" + client.getHostname() + " MODE " + channel->getName() + " " + modeChanges;
+
+    paramIndex = 3;
+    for (size_t i = 0; i < modes.size(); ++i)
+    {
+        char c = modes[i];
+        if (c == '+' || c == '-')
+            continue;
+        if (c == 'k' || c == 'l' || c == 'o') {
+            if (paramIndex < input.size())
+                fullModeMsg += " " + input[paramIndex++];
+        }
+    }
+
+    for (size_t i = 0; i < channel->members.size(); ++i) {
+        sendReply(channel->members[i].getClientSocketfd(), fullModeMsg + "\r\n");
+    }
+
+    // sendReply(client.getClientSocketfd(), RPL_CHANGEMODE(client.getHostname(), channel->getName(), modeChanges));
 }
