@@ -44,7 +44,17 @@ void Server::Join(Client client, std::vector<std::string> input)
                                 if (Channels[i].admines[idx].getName() == client.getName())
                                 {
                                     Channels[i].admines.erase(Channels[i].admines.begin() + idx);
-                                    Channels[i].admines.push_back(newAdmin);
+									size_t c = 0;
+									for (; c < Channels[i].admines.size(); c++)
+									{
+										if (Channels[i].admines[c].getName() == newAdmin.getName())
+											break ;
+									}
+									if (c == Channels[i].admines.size())
+									{
+                                    	Channels[i].admines.push_back(newAdmin);
+										Mode(Channels[i].admines[idx], split("MODE " + Channels[i].getName() + " +o " + newAdmin.getName() + "\r\n"));
+									}
                                     break;
                                 }
                             }
