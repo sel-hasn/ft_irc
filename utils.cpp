@@ -1,7 +1,10 @@
 #include "Server.hpp"
 
 void    Server::sendReply(int cSocketfd, std::string message){
-    send(cSocketfd, message.c_str(), message.length(), 0);
+    if (send(cSocketfd, message.c_str(), message.length(), 0) < 0){
+        std::cout << "send() failed !\n";
+        return ;
+    }
 }
 
 Channel* Server::getChannel(std::string name)
@@ -112,7 +115,7 @@ void  Server::treating_commands(Client *client){
     if (buffer.length() == 0)
         return ;
     std::vector<std::string> input = split(buffer);
-    std::cout <<buffer<<std::endl<<std::endl;
+    // std::cout <<buffer<<std::endl<<std::endl;
     if ((client->gethasPass() || !client->gethasPass()) && !input.size())
         return ;
     if (!client->gethasPass() && input[0] != "PASS"){

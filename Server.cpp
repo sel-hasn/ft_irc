@@ -24,13 +24,11 @@ void    Server::ServerPrepa(){
     ServerSocketFD = socket(PF_INET, SOCK_STREAM, 0);
     if (ServerSocketFD < 0)
         throw CustomException("Failed to create socket\n");
-    /**/
     int en = 1;
-    if(setsockopt(ServerSocketFD, SOL_SOCKET, SO_REUSEADDR, &en, sizeof(en)) == -1) //-> set the socket option (SO_REUSEADDR) to reuse the address
+    if(setsockopt(ServerSocketFD, SOL_SOCKET, SO_REUSEADDR, &en, sizeof(en)) == -1)
         throw(CustomException("faild to set option (SO_REUSEADDR) on socket"));
-    if (fcntl(ServerSocketFD, F_SETFL, O_NONBLOCK) == -1) //-> set the socket option (O_NONBLOCK) for non-blocking socket
+    if (fcntl(ServerSocketFD, F_SETFL, O_NONBLOCK) == -1)
         throw(CustomException("faild to set option (O_NONBLOCK) on socket"));
-    /**/ 
     std:: cout << Port << ' ' << PassWord << std::endl;
     if (bind(ServerSocketFD, (struct sockaddr*)&SAddress, sizeof(SAddress)) < 0)
         throw CustomException("Bind failed\n");
@@ -153,6 +151,10 @@ void Server::handleClientData(int fd){
     switch (bytesrecieved)
     {
         case (-1):{
+            clint->sethasPass(false);
+            clint->sethasName(false);
+            clint->sethasrealName(false);
+            clint->sethasUname(false);
             throw CustomException(" Issue\n");
         }
         case (0):{
@@ -163,9 +165,15 @@ void Server::handleClientData(int fd){
             throw CustomException(" client is disconnecting\n");
         }
         default:{
-            clint->setBuff(std::string(buffer));
-            treating_commands(clint);
-            clint->setBuff("");
+                clint->addtoBuff(buffer);
+                size_t npos = clint->getBUFFER().find('\n');
+                if (npos != std::string::npos) {
+                    std::string command = clint->getBUFFER().substr(0, npos);
+                    std::string remaining = clint->getBUFFER().substr(npos + 1);
+                    clint->setBuff(command);
+                    treating_commands(clint);
+                    clint->setBuff(remaining);
+                }
         }
     }
 }

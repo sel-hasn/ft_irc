@@ -66,6 +66,8 @@ class Client{
 
         void setBuff(std::string buff){ BUFFER = buff; }
 
+        void addtoBuff(std::string buff){ BUFFER += buff; }
+
         void setRegister(bool stat){ isRegistered = stat; }
 
         void setClientsock(int fd){ ClientSocketfd = fd; }

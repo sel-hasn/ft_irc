@@ -11,14 +11,14 @@ int ParsePort(const std::string& av1){
                 throw -2;
         }
         port = atol(av1.c_str());
-        if (port < 1024 || port > 65535)
+        if (port < 1024 || port > 49151)
             throw -4;
     }
     catch(int n){
         if (n == -2)
             throw std::runtime_error("Invalid port: Not a number.");
         if (n == -4)
-            throw std::runtime_error("Invalid port: Must be between 1024 and 65535.\n\t\t(Note : ports under 1024 needs a root previleges to use them sorry in advance but we do not have those access)");
+            throw std::runtime_error("Invalid port: Must be between 1024-49151.\n\t\t(Note : ports under 1024 needs a root previleges to use them sorry in advance but we do not have those access)");
     }
     return port;
 }
