@@ -161,6 +161,8 @@ void bot::playGame(std::string &sender, std::string &message)
         usleep(100000);
         sendMessage("PRIVMSG " + p->Nick + " : No more questions. Thanks for playing!");
     }
+    else if (message == "game" || message == "GAME")
+        sendQuizToPlayer(*p);
     else {
         sendMessage("PRIVMSG " + p->Nick + " : Wrong answer. You have to shose a,b or c!");
         usleep(10000);
@@ -232,7 +234,7 @@ void bot::startbot()
         }
 
         buffer[bytesrecieved] = '\0';
-        std::cout<<buffer<<std::endl;
+        // std::cout<<buffer<<std::endl;
         sender = getSender(buffer);
         message = getMessage(buffer);
         std::cout<<sender<<" : "<<message<<std::endl;
