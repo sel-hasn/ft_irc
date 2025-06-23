@@ -91,4 +91,5 @@ std::vector<std::string> split(const std::string& str);
 void eraser_samenewlines(std::string& receivedData);
 std::string toString(time_t val);
 
+
 #endif
