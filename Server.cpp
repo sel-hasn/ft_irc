@@ -80,7 +80,7 @@ void    Server::ServerStarts(){
                     erasing_fd_from_poll_vecteurs(tmp);
                 }
             }
-            
+
         }
     }
     server_ends();

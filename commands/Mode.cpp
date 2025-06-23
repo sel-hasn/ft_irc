@@ -84,7 +84,7 @@ void Server::Mode(Client client, std::vector<std::string> input)
         bool needsParam = (c == 'k' || c == 'o' || c == 'l');
         std::string param;
 
-        if (needsParam)
+        if (needsParam && add == true)
         {
             if (paramIndex >= input.size())
             {

@@ -159,7 +159,7 @@ void Server::Join(Client client, std::vector<std::string> input)
 					}
 					else if (it_key->size() == 0)
 					{
-						sendReply(client.getClientSocketfd(), ERR_INCORPASS(client.getName()));
+						sendReply(client.getClientSocketfd(), ERR_PASSWDMISMATCH(client.getName()));
 						continue ;
 					}
 				}

@@ -28,8 +28,8 @@ void Server::Kick(Client client, std::vector<std::string> input, std::string buf
         couse = "";
     if (channel->isOperator(client)) {
         std::string reply;
-        if (client.getName() == toKickclient->getName() && channel->admines.size() == 1)
-            return ;
+        // if (client.getName() == toKickclient->getName() && channel->admines.size() == 1)
+        //     return ;
         if (couse.empty())
             reply = ":" + client.getHostname() + " KICK " + channel->getName() + " " + toKickclient->getName() + "\r\n";
         else 
@@ -43,6 +43,26 @@ void Server::Kick(Client client, std::vector<std::string> input, std::string buf
         if (channel->isOperator(*toKickclient)){
             channel->RemoveMember(*toKickclient);
             channel->RemoveOperator(*toKickclient);
+            if (channel->admines.size() == 0 && channel->members.size() > 0){
+                for (size_t i = 0; i < channel->members.size(); i++)
+                {
+                    if (toKickclient->getName() != channel->members[i].getName()){
+                        channel->admines.push_back(channel->members[i]);
+                        break ;
+                    }
+                }
+            }
+            if (channel->members.size() == 0)
+            {
+                for (size_t i = 0; i < Channels.size(); i++)
+                {
+                    if (channel->getName() == Channels[i].getName())
+                    {
+                        Channels.erase(Channels.begin() + i);
+                        break ;
+                    }
+                }
+            }
         }
         else 
             channel->RemoveMember(*toKickclient);
