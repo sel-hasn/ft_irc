@@ -77,6 +77,8 @@ void    Server::ServerStarts(){
                 catch(const CustomException& e){
                     std::cout << "cought exception inside server's poll's func() :" << e.msg();
 
+                    erasing_from_inviting_channels(*getClient_byfd(tmp));
+
                     std::vector<std::string> input;
                     input.push_back("JOIN");
                     input.push_back("0");
@@ -86,7 +88,6 @@ void    Server::ServerStarts(){
                     close(tmp);
                     erasing_fd_from_client_vecteurs(tmp);
                     erasing_fd_from_poll_vecteurs(tmp);
-                    erasing_from_inviting_channels(*getClient_byfd(tmp));
                 }
             }
 
