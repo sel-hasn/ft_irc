@@ -177,7 +177,7 @@ void Server::Join(Client client, std::vector<std::string> input)
                     sendReply(client.getClientSocketfd(), ERR_INVITEONLYCHAN(client.getName(), *it_name));
                     continue ;
                 }
-				if (it->getInviteOnly() && it->isInvited(client))
+				if (it->isInvited(client))
 				{
 					it->RemoveFromInvited(client);
 				}
