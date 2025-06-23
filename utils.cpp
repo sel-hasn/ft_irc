@@ -115,9 +115,9 @@ void  Server::treating_commands(Client *client){
     if (buffer.length() == 0)
         return ;
     std::vector<std::string> input = split(buffer);
-    // std::cout <<buffer<<std::endl<<std::endl;
-    if ((client->gethasPass() || !client->gethasPass()) && !input.size())
-        return ;
+    std::cout <<buffer<<std::endl<<std::endl;
+    // if ((client->gethasPass() || !client->gethasPass()) && !input.size())
+    //     return ;
     if (!client->gethasPass() && input[0] != "PASS"){
         sendReply(client->getClientSocketfd(), ERR_NOTREGISTERED);
         return ;

@@ -1,4 +1,3 @@
-
 #include "Server.hpp"
 
 int main(int ac, char **av){
@@ -14,11 +13,6 @@ int main(int ac, char **av){
         std::cout << "Program's Error Exception : " << e.what() << std::endl;
         return 1;
     }
-    // std::string cmd = "./bonus/a.out localhost " + std::to_string(Port) + " " + av[2] + " &";
-    // int ret = system(cmd.c_str());
-    // if (ret == -1) {
-    //     std::cerr << "Failed to launch bot\n";
-    // }
     signal(SIGQUIT, Server::Signals_handler);
     signal(SIGINT, Server::Signals_handler);
     signal(SIGPIPE, SIG_IGN);

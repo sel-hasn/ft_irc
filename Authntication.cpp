@@ -37,7 +37,7 @@ void  Server::NICK_cmd(Client *clint, std::string &buffer){
         std::cerr << "Client sent invalid nickname length\n";
         return ;
     }
-    if (std::isspace(splited[1][0]) || splited[1][0] == ':' || splited[1][0] == '#' || splited[1][0] == '&' || std::isdigit(splited[1][0])){
+    if (splited[1][0] == ':' || splited[1][0] == '#' || splited[1][0] == '&' || std::isdigit(splited[1][0])){
         sendReply(clint->getClientSocketfd(), ERR_NOSUCHNICK(splited[1]));
         std::cerr << "Client sent invalid nickname leadchar\n";
         return ;
@@ -62,7 +62,7 @@ void  Server::NICK_cmd(Client *clint, std::string &buffer){
     clint->setName(splited[1]);
     clint->sethasName(true);
     if (clint->gethasUserName()){
-        sendReply(clint->getClientSocketfd(), RPL_WELCOME(splited[1], "Welcome to irc server"));
+        sendReply(clint->getClientSocketfd(), RPL_WELCOME(splited[1], "Welcome to the irc server Network, " + clint->getHostname()));
         clint->setRegister(true);
     }
 }
@@ -136,7 +136,7 @@ void  Server::USER_cmd(Client *clint, std::string &buffer){
     clint->sethasUname(true);
     clint->setUserName(splited[1]);
     if (clint->gethasName()){
-        sendReply(clint->getClientSocketfd(), RPL_WELCOME(clint->getName(), "Welcome to irc server"));
+        sendReply(clint->getClientSocketfd(), RPL_WELCOME(clint->getName(), "Welcome to the irc server Network, " + clint->getHostname()));
         clint->setRegister(true);
     }
 }

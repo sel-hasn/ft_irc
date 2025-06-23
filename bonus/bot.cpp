@@ -92,8 +92,13 @@ player *bot::getplayer(std::string sender)
 }
 
 void bot::sendQuizToPlayer(player &p) {
-    // if (p.quizIndix >= quizDatabase.size())
-    //     p.quizIndix = 0;
+    if (quizDatabase.empty()) {
+        sendMessage("PRIVMSG " + p.Nick + " : Error: Quiz database is empty. Please contact the administrator.");
+        return;
+    }
+
+    if (p.quizIndix >= quizDatabase.size())
+        p.quizIndix = 0;
 
     Quiz &q = quizDatabase[p.quizIndix];
 
@@ -121,7 +126,7 @@ void bot::checkanswer(player &p, const std::string &message) {
         sendMessage("PRIVMSG " + p.Nick + " : Correct! 🎉");
         p.quizIndix++;
     } else {
-        sendMessage("PRIVMSG " + p.Nick + " : Wrong answer. 😢");
+        sendMessage("PRIVMSG " + p.Nick + " : Wrong answer. 😢, The correct one is " + q.answer);
         p.quizIndix++;
     }
     usleep(10000);
@@ -151,7 +156,7 @@ void bot::playGame(std::string &sender, std::string &message)
 
     if (message == "a" || message == "b" || message == "c")
         checkanswer(*p, message);
-    else if (p->quizIndix > 2){
+    else if (p->quizIndix > 47){
         sendMessage("PRIVMSG " + p->Nick + " : You have completed the quiz!");
         usleep(100000);
         sendMessage("PRIVMSG " + p->Nick + " : No more questions. Thanks for playing!");
@@ -163,7 +168,7 @@ void bot::playGame(std::string &sender, std::string &message)
     }
 }
 
-void bot::sendrespon(std::string &message, std::string &sender, std::string buffer)
+void bot::sendrespon(std::string &message, std::string &sender)
 {
     if (sender == ":IRCServer")
         return ;
@@ -177,31 +182,31 @@ void bot::sendrespon(std::string &message, std::string &sender, std::string buff
 }
 
 void bot::initQuizDatabase() {
-    Quiz q1;
-    q1.question = "What is the capital of France?";
-    q1.choices[0] = "a) Paris";
-    q1.choices[1] = "b) London";
-    q1.choices[2] = "c) Rome";
-    q1.answer = 'a';
-    quizDatabase.push_back(q1);
+    std::ifstream file("bonus/quiz_data.txt");
+    if (!file.is_open()) {
+        std::cerr << "Failed to open quiz_data.txt" << std::endl;
+        return;
+    }
 
-    Quiz q2;
-    q2.question = "Which language is used to style web pages?";
-    q2.choices[0] = "a) HTML";
-    q2.choices[1] = "b) CSS";
-    q2.choices[2] = "c) JavaScript";
-    q2.answer = 'b';
-    quizDatabase.push_back(q2);
+    std::string line;
+    while (std::getline(file, line)) {
+        std::stringstream ss(line);
+        std::string segment;
+        Quiz q;
 
-    Quiz q3;
-    q3.question = "Which planet is known as the Red Planet?";
-    q3.choices[0] = "a) Earth";
-    q3.choices[1] = "b) Mars";
-    q3.choices[2] = "c) Jupiter";
-    q3.answer = 'b';
-    quizDatabase.push_back(q3);
+        std::getline(ss, q.question, '|');
+        for (int i = 0; i < 3; ++i)
+            std::getline(ss, q.choices[i], '|');
+        std::string answer;
+        std::getline(ss, answer, '|');
+        if (!answer.empty())
+            q.answer = answer[0];
+
+        quizDatabase.push_back(q);
+    }
+
+    file.close();
 }
-
 
 void bot::startbot()
 {
@@ -232,7 +237,7 @@ void bot::startbot()
         message = getMessage(buffer);
         std::cout<<sender<<" : "<<message<<std::endl;
 
-        sendrespon(message, sender, buffer);
+        sendrespon(message, sender);
     }
 }
 

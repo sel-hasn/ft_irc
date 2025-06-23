@@ -2,6 +2,9 @@
 
 #include "../Server.hpp"
 #include "../CustomException.hpp"
+#include <fstream>
+#include <sstream>
+#include <iostream>
 
 class CustomException;
 
@@ -36,7 +39,7 @@ public:
     void sendMessage(const std::string &msg);
     player *getplayer(std::string sender);
     void initQuizDatabase();
-    void sendrespon(std::string &message, std::string &sender, std::string buffer);
+    void sendrespon(std::string &message, std::string &sender);
     void playGame(std::string &sender, std::string &message);
     void checkanswer(player &p, const std::string &message);
     void sendQuizToPlayer(player &p);
