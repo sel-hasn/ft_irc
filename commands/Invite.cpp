@@ -33,6 +33,7 @@ void Server::Invite(Client client, std::vector<std::string> input)
     }
     sendReply(client.getClientSocketfd(), RPL_INVITING(client.getName(), toInviteClient->getName(), channel->getName()));
     std::string reply = ":" + client.getHostname() + " INVITE " + toInviteClient->getName() + " " + channel->getName() + "\r\n";
-    channel->addToInvited(*toInviteClient);
+    if (channel->isOperator(client))
+        channel->addToInvited(*toInviteClient);
     sendReply(toInviteClient->getClientSocketfd(), reply);
 }

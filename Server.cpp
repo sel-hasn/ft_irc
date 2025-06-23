@@ -43,6 +43,14 @@ void    Server::ServerPrepa(){
     PollFDs.push_back(server_pollfd);
 }
 
+void Server::erasing_from_inviting_channels(Client client)
+{
+    for (size_t i = 0; i < Channels.size(); i++)
+    {
+        Channels[i].RemoveFromInvited(client);
+    }
+}
+
 void    Server::ServerStarts(){
     try{
         ServerPrepa();
@@ -78,6 +86,7 @@ void    Server::ServerStarts(){
                     close(tmp);
                     erasing_fd_from_client_vecteurs(tmp);
                     erasing_fd_from_poll_vecteurs(tmp);
+                    erasing_from_inviting_channels(*getClient_byfd(tmp));
                 }
             }
 

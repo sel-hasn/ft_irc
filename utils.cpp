@@ -137,7 +137,7 @@ void  Server::treating_commands(Client *client){
     else if (input[0] == "PRIVMSG")
         Privmsg(*client, input);
     else if (input[0] == "KICK")
-        Kick(*client, input, buffer);
+        Kick(*client, input);
     else if (input[0] == "INVITE")
         Invite(*client, input);
     else if (input[0] == "TOPIC")

@@ -70,12 +70,13 @@ class Server{
         void                    erasing_fd_from_poll_vecteurs(int fd);
         void                    erasing_fd_from_client_vecteurs(int fd);
         void                    server_ends();
+        void                    erasing_from_inviting_channels(Client client);
 
         Channel *getChannel(std::string name);
 
         //COMANDS
 
-        void Kick(Client client, std::vector<std::string> input, std::string buffer);
+        void Kick(Client client, std::vector<std::string> input);
         void Invite(Client client, std::vector<std::string> input);
         void Topic(Client client, std::vector<std::string> input, std::string buffer);
         void Mode(Client client, std::vector<std::string> input);

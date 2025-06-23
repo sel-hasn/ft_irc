@@ -177,6 +177,10 @@ void Server::Join(Client client, std::vector<std::string> input)
                     sendReply(client.getClientSocketfd(), ERR_INVITEONLYCHAN(client.getName(), *it_name));
                     continue ;
                 }
+				if (it->getInviteOnly() && it->isInvited(client))
+				{
+					it->RemoveFromInvited(client);
+				}
 				it->members.push_back(client);
 				std::vector<Client>::iterator it_member = it->members.begin();
 				for (; it_member != it->members.end(); it_member++)
