@@ -126,12 +126,12 @@ void Server::handleNewClient(){
 }
 
 void Server::handleClientData(int fd){
-    char    buffer[1024];
-    std::memset(buffer, 0, 1024);
+    char    buffer[512];
+    std::memset(buffer, 0, 512);
     Client *clint = getClient_byfd(fd);
     if (!clint)
         throw CustomException(" client is not exist anymore\n");
-    int bytesrecieved = recv(clint->getClientSocketfd(), buffer, 1023, 0);
+    int bytesrecieved = recv(clint->getClientSocketfd(), buffer, 512, 0);
     switch (bytesrecieved)
     {
         case (-1):{

@@ -156,7 +156,7 @@ void bot::playGame(std::string &sender, std::string &message)
 
     if (message == "a" || message == "b" || message == "c")
         checkanswer(*p, message);
-    else if (p->quizIndix > 47){
+    else if (p->quizIndix >= quizDatabase.size()){
         sendMessage("PRIVMSG " + p->Nick + " : You have completed the quiz!");
         usleep(100000);
         sendMessage("PRIVMSG " + p->Nick + " : No more questions. Thanks for playing!");

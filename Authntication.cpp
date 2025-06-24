@@ -32,6 +32,11 @@ void  Server::NICK_cmd(Client *clint, std::string &buffer){
         std::cerr << "Client sent invalid nickname args\n";
         return ;
     }
+    if (clint->getconnectTobot() == true)
+    {
+        sendReply(clint->getClientSocketfd(), ":IRCServer :Can't channage Nick name while playing quiz \r\n");
+        return ;
+    }
     if (splited[1].length() < 3) {
         sendReply(clint->getClientSocketfd(), ERR_NONICKNAMEGIVEN(splited[1]));
         std::cerr << "Client sent invalid nickname length\n";
@@ -130,7 +135,6 @@ void  Server::USER_cmd(Client *clint, std::string &buffer){
     {
         newrealname += splited[4][i];
     }
-    std::cout << "new new new new realname : >>>" << newrealname << " <<<< \n";
     clint->setrealName(newrealname);
     clint->sethasrealName(true);
     clint->sethasUname(true);

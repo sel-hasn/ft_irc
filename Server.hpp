@@ -82,8 +82,8 @@ class Server{
         void Mode(Client client, std::vector<std::string> input);
 
         void Join(Client client, std::vector<std::string> input);
-        void Privmsg(Client client, std::vector<std::string> input);
-        void connectTobot(Client client, std::vector<std::string> input);
+        void Privmsg(Client &client, std::vector<std::string> input);
+        void connectTobot(Client &client, std::vector<std::string> input);
 };
 
 int ParsePort(const std::string& av1);

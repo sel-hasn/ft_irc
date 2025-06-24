@@ -9,7 +9,7 @@ std::string trim(const std::string& str) {
     return str.substr(first, last - first + 1);
 }
 
-void Server::connectTobot(Client client, std::vector<std::string> input)
+void Server::connectTobot(Client &client, std::vector<std::string> input)
 {
 	std::string message;
 
@@ -26,32 +26,29 @@ void Server::connectTobot(Client client, std::vector<std::string> input)
 	}
 
 	Client *bot = getClient(input[1]);
+	if (!bot) {
+		sendReply(client.getClientSocketfd(), ":IRCServer : PRIVMSG " + client.getName() + " :Bot not found.\r\n");
+		std::cerr << "[ERROR] Tried to message non-existent bot: " << input[1] << std::endl;
+		return;
+	}
 
 	message = trim(message);
 	sendReply(bot->getClientSocketfd(), client.getName() + " : " + message);
-	if (message == "game" || message == "GAME")
-	{
-		std::cout<<"\n\nconnect with the bot\n\n";
+
+	if (message == "game" || message == "GAME") {
+		std::cout << "\n\nconnect with the bot\n\n";
 		client.setconnectTobot(true);
 	}
-	// else {
-	// 	sendReply(client.getClientSocketfd(), ":bot!quizbot@127.0.0.1 PRIVMSG "+ client.getName() +" : No more questions. Thanks for playing!\r\n");
-	// }
 }
 
-void Server::Privmsg(Client client, std::vector<std::string> input)
+void Server::Privmsg(Client &client, std::vector<std::string> input)
 {
-	(void)client;
 	if (input.size() <= 2)
 	{
 		sendReply(client.getClientSocketfd(), ERR_NEEDMOREPARAMS(input[0]));
 		return ;
 	}
-	// if (input[2][0] != ':')
-	// {
-	// 	sendReply(client.getClientSocketfd(), ERR_NEEDMOREPARAMS(input[0]));
-	// 	return ;
-	// }
+
 	if (input[1] == "bot"){
 		connectTobot(client, input);
 		return ;
