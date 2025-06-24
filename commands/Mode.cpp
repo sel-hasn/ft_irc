@@ -1,12 +1,7 @@
 #include "../Server.hpp"
 void Server::Mode(Client client, std::vector<std::string> input)
 {
-    std::cout << "MODE command input: ";
-    for (size_t i = 0; i < input.size(); ++i)
-        std::cout << "[" << i << "] " << input[i] << " ";
-    std::cout << std::endl;
-
-    if (input.size() < 2)
+     if (input.size() < 2)
     {
         sendReply(client.getClientSocketfd(), ERR_NEEDMOREPARAMS(input[0]));
         return;
@@ -84,7 +79,7 @@ void Server::Mode(Client client, std::vector<std::string> input)
         bool needsParam = (c == 'k' || c == 'o' || c == 'l');
         std::string param;
 
-        if (needsParam && add == true)
+        if ((add == false && c == 'o') || (needsParam && add == true))
         {
             if (paramIndex >= input.size())
             {
@@ -119,7 +114,6 @@ void Server::Mode(Client client, std::vector<std::string> input)
                 break;
             case 'o':
             {
-                std::cout<<"hello\n\n";
                 Client *target = getClient(param);
                 if (!target || !channel->inChannel(*target))
                 {
