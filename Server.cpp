@@ -132,8 +132,6 @@ void Server::handleClientData(int fd){
     if (!clint)
         throw CustomException(" client is not exist anymore\n");
     int bytesrecieved = recv(clint->getClientSocketfd(), buffer, 1023, 0);
-    // std::cerr <<  
-    // calling recv in a loop until it returns -1 and (errno == EAGAIN)
     switch (bytesrecieved)
     {
         case (-1):{
