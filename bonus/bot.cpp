@@ -40,8 +40,7 @@ void bot::authenticate()
     sendMessage("PASS " + std::string(this->password));
     usleep(10000);
 
-    std::string nickname = "bot";
-    sendMessage("NICK " + nickname);
+    sendMessage("NICK bot");
     usleep(10000);
 
     sendMessage("USER quizbot 0 * :Quiz Bot");
